@@ -4,15 +4,12 @@
 {% block link %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'webadmin/css/dusty.css'|add:url_suffix %}" type="text/css" media="screen"/>
-	<link rel="stylesheet" type="text/css" href="{% static 'graph/css/flot.css' %}"/>
-{% endblock %}    
-
-{% block script %}
-	{{ block.super }}
-	<script src="{% static 'graph/js/jquery.flot.js' %}"></script>
-	<script src="{% static 'graph/js/jquery.flot.axislabels.js' %}"></script>
-	<script src="{% static 'graph/js/html2canvas.js' %}"></script>
-{% endblock %}
+    <link rel="stylesheet" type="text/css" href="{% static "webgateway/css/ome.body.css" %}"/>
+    <link rel="stylesheet" href="{% static "webgateway/css/ome.table.css"|add:url_suffix %}" type="text/css" media="screen"/>
+    <link rel="stylesheet" href="{% static "3rdparty/jquery.tablesorter-2.0.3/jquery.tablesorter.css" %}" type="text/css" media="screen"/>
+	<link rel="stylesheet" href="{% static '3rdparty/jquery.chosen-1.2.0/chosen.css' %}" type="text/css" media="screen"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'graph/css/graph.css' %}"/>
+{% endblock %}  
 
 {% block content %}
     <div id="center_details">
@@ -20,4 +17,3 @@
         {% block center_details %}{% endblock %}
     </div>
 {% endblock %}
-
