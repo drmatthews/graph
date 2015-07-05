@@ -19,7 +19,7 @@ import shutil
 import omero
 from omeroweb.webclient.decorators import login_required
 
-ANNPATH = '/Users/uqdmatt2/Desktop/temp'
+ANNPATH = '/home/omero/temp'
 #ANNPATH = tempfile.mkdtemp(prefix='downloaded_annotations')
 
 def upload_graph(conn, path):
@@ -263,7 +263,7 @@ def index(request, conn=None, **kwargs):
                    'num_csv': num_csv, 'num_txt': num_txt,
                    'form': ann_form, 'graph_form': graph_form,\
                    'prev_form':preview_form}
-        return render(request, "graph/index.html", context)
+        return render(request, "graph/indexbs.html", context)
         
 @login_required()
 def plot(request, conn=None, **kwargs):

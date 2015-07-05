@@ -94,6 +94,12 @@
 	
 	<script type="text/javascript">
 		$(document).ready(function() {
+
+			// keep-alive ping every minute, so that OMERO session doesn't die
+	        setInterval(function (){
+	            $.get("{% url 'keepalive_ping' %}");
+	        }, 60000);
+
 			$("#id_preview_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to preview'});
 			$("#id_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to plot'});
 			$("#id_x").chosen({disable_search_threshold: 10,placeholder_text:'Choose data for x axis',width: "300px"});
