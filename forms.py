@@ -29,3 +29,4 @@ class GraphForm(forms.Form):
     title = CharField(max_length=200,required=False)
     xLabel = CharField(max_length=50,required=False)
     yLabel = CharField(max_length=50,required=False)
+    tick_size = IntegerField(required=False,min_value=1)

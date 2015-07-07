@@ -288,6 +288,7 @@ def plot(request, conn=None, **kwargs):
             yLabel = y
             if form.cleaned_data['yLabel']:
                 yLabel = form.cleaned_data['yLabel']
+            tick_size = form.cleaned_data['tick_size']
             xdata = [floor(xd) for xd in get_column(fpath,fextension,x,header_row,sheet)]
             xmin = min(xdata)
             xmax = max(xdata)
