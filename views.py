@@ -298,7 +298,7 @@ def plot(request, conn=None, **kwargs):
                   'title': title, 'x' : x, 'y' : y,\
                   'xLabel': xLabel, 'yLabel': yLabel,\
                   'xdata': xdata, 'ydata': ydata,\
-                  'num_series': len(ydata),
+                  'num_series': len(ydata),'tick_size':tick_size,\
                   'xmin': xmin, 'xmax': xmax,'graph_data': graph}
             data = json.dumps(rv)
             return HttpResponse(data, mimetype='application/json')

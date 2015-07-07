@@ -180,7 +180,6 @@
 		    					</div>
 							</form></p>
 						</div>
-						<div id="preview_data"></div>
 						<div role="tabpanel" class="tab-pane" id="preview">
 							<p><form action="{% url 'preview' %}" method="POST" id="preview_form">{% csrf_token %}
 						        {% for field in prev_form %}
@@ -211,6 +210,14 @@
 		        					<button type="submit" class="btn btn-primary" >Preview</button>
 		    					</div>
 							</form></p>
+						</div>
+					</div>
+					<ul class="nav nav-tabs" id='#graph_settings_tab'>
+  						<li role="presentation" class="active"><a href="#Graph_settings" role="tab" data-toggle="tab">Graph settings</a></li>
+  					</ul>
+  					<div class="tab-content" id='#graph_settings_tab_content'>
+  						<div role="tabpanel" class="tab-pane active" id="Graph_settings">
+
 						</div>
 					</div>
 				{% else %}
@@ -271,12 +278,15 @@
 			$("#id_preview_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to preview'});
 			$("#id_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to plot'});
 			$("#id_x").chosen({disable_search_threshold: 10,placeholder_text:'Choose data for x axis',width: "100px"});
-			$("#id_y").chosen({disable_search_threshold: 10,placeholder_text:'Choose columns to plot',width: "100px"});
+			$("#id_y").chosen({disable_search_threshold: 10,placeholder_text:'Choose columns to plot',width: "300px"});
 			$("#preview_sheet").hide();
 			$(".sheet").hide();
 			$("#graph_setup").hide();
 			//$(".graph-container").hide();
 			$("#graph_toolbar").hide();
+			$("#graph_settings_tab li.active").removeClass('active');
+			//$("#graph_settings_tab").hide();
+			//$("#graph_settings_tab_content").hide();
 			
 			if ($('#id_annotation').val().indexOf('xls')>0) {
 						$("#preview_sheet").show();

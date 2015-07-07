@@ -141,19 +141,18 @@
 				title = $('#id_title').val(),
 				xLabel = $('#id_xLabel').val(),
 				yLabel = $('#id_yLabel').val(),
-				seriesColors = $('#series_select'),
+				tick_size = $('#id_tick_size').val();
 				annId = "{{ request.session.annotation_id }}";
 			$.ajax({
 				traditional: true,
 				type: "POST",
 				url: "/graph/plot/",
-				data : {'x' : x, 'y': y, 'title': title, 'xLabel': xLabel, 'yLabel': yLabel },
+				data : {'x' : x, 'y': y, 'title': title, 'xLabel': xLabel, 'yLabel': yLabel, 'tick_size': tick_size },
 				success: function(plotresults) {
 
 					function generateData(fseriesdata) {
 					    series = [];
 					    for (fi = 0; fi < fseriesdata.length; fi++) {
-							seriesColors.append($("<option />").val('Series'+String(fi)).text('Series'+String(fi)));
 							
 					        var fd = fseriesdata[fi];
 				            series.push({
@@ -172,7 +171,7 @@
 						xLabel = plotresults.xLabel,
 						yLabel = plotresults.yLabel;
 					model.set({'title': title, 'xLabel': xLabel, 'yLabel': yLabel, 'useCanvas': useCanvas,
-					'axisLabelPadding': axisLabelPadding, 'ydata': ydata, 'xmax': xmax});
+					'axisLabelPadding': axisLabelPadding, 'ydata': ydata, 'xmax': xmax, 'tickSize': tick_size});
 					model.plotGraph();
 					el.modal('hide');
 			  },
