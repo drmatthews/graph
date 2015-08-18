@@ -82,3 +82,29 @@
 		    c.fillText(title,cx,30);
 		}
 	});
+
+	var PlotlyModel = Backbone.Model.extend({
+		//url: "/graph/plot",
+		defaults: {
+			x: [1, 2, 3, 4],
+			y: [10, 15, 13, 17],
+			type: 'scatter'
+		},
+		initialize: function(){
+			this.Plot();
+		},
+		/*initialize: function(){
+			this.on("change:title", function(model){
+				console.log(model.get("title"))
+				alert("title changed to" + model.get("title") );
+			});
+		},*/
+		Plot: function(){
+			var trace = {x: this.get('x'), y: this.get('y'),type: this.get('type')},
+				data = [trace];
+
+			$(".graph-container").show();
+			$("#graph_toolbar").show();
+			Plotly.newPlot('graph_container', data);
+		}
+	});
