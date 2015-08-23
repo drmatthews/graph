@@ -65,6 +65,12 @@ def flot_data(xdata,ydata):
         fdata.append(sdata)
     return fdata
 
+def saveas_csv(fpath,data):
+    filename, file_extension = os.path.splitext(fpath)
+    csv_path = filename + '.csv'
+    data.to_csv(csv_path)
+    return csv_path
+
 def get_data(path,ext,header_row,sheet):
     if ('xls' in ext):
         with open(path) as t_in:
@@ -96,57 +102,62 @@ def get_column(path,ext,col,header_row,sheet):
 def preview_data(path,ext,sheet):
     max_rows = 10
     max_cols = 10
-    try:
-        if '.xls' in ext:
-            wb = openpyxl.load_workbook(path)
-            sh = wb.get_sheet_names()[sheet]
-            shdata = wb.get_sheet_by_name(sh)
-            num_rows = shdata.get_highest_row() - 1
-            num_cols = shdata.get_highest_column()
+#    try:
+    if '.xls' in ext:
+        wb = openpyxl.load_workbook(path)
+        sh = wb.get_sheet_names()[sheet]
+        shdata = wb.get_sheet_by_name(sh)
+        num_rows = shdata.get_highest_row() - 1
+        num_cols = shdata.get_highest_column()
+        data = []
+        for r in range(max_rows):
+            row_data = []
+            for c in range(max_cols):
+                row_data.append(shdata.cell(row=r+1, column=c+1).value)
+            data.append(row_data)
+    elif '.txt' in ext:
+        num_rows = sum(1 for line in open(path))
+        with open(path) as file:
+            data = [next(file)[:max_cols] for x in xrange(max_rows)]
+    elif '.csv' in ext:
+        num_rows = sum(1 for line in open(path))
+        with open(path,'rb') as file:
+            csv_file = csv.reader(file)
             data = []
-            for r in range(max_rows):
-                row_data = []
-                for c in range(max_cols):
-                    row_data.append(shdata.cell(row=r+1, column=c+1).value)
-                data.append(row_data)
-        elif '.txt' in ext:
-            num_rows = sum(1 for line in open(path))
-            with open(path) as file:
-                data = [next(file)[:max_cols] for x in xrange(max_rows)]
-        elif '.csv' in ext:
-            num_rows = sum(1 for line in open(path))
-            with open(path) as file:
-                csv_file = csv.reader(file)
-                data = []
-                for i in range(max_rows):
-                    data.append(csv_file.next()[:max_cols])
-        print num_rows
-        if num_rows < 1000:
-            return data
-        else:
-            return None
-    except:
-        print 'there was a problem parsing the data'
+            for i in range(max_rows):
+                data.append(csv_file.next()[:max_cols])
+    print num_rows
+    if num_rows < 1000:
+        return data
+    else:
         return None
+    #except:
+    #    print 'there was a problem parsing the data'
+    #    return None
                 
 def parse_annotation(path,ext,header_row,sheet):
-    try:
-        data = get_data(path,ext,header_row,sheet)
-    
-        num_rows = len(data.index)
-        if num_rows < 1000:
-            columns = [(" ", " ")]
-            for col in data.columns.values:
-                columns.append((col,col))
-            message = "Sucessfully processed %s for plotting" % os.path.basename(path) 
-            return columns,message 
-        else:
-            columns = None
-            message = "Unfortunately that dataset has too many columns for plotting"
-            return columns,message
-    except:
-        print 'there was a problem parsing the data'
-        return None
+    #try:
+    data = get_data(path,ext,header_row,sheet)
+    if 'csv' not in ext:
+        # save all files as csv as parsing with eventually be
+        # done with d3.js
+        csv_path = saveas_csv(path,data)
+    else:
+        csv_path = path
+    num_rows = len(data.index)
+    if num_rows < 1000:
+        columns = [(" ", " ")]
+        for col in data.columns.values:
+            columns.append((col,col))
+        message = "Sucessfully processed %s for plotting" % os.path.basename(path) 
+        return columns,message,csv_path
+    else:
+        columns = None
+        message = "Unfortunately that dataset has too many columns for plotting"
+        return columns,message,csv_path
+    #except:
+    #    print 'there was a problem parsing the data'
+    #    return None
                 
 def download_annotation(ann):
     """
@@ -237,7 +248,7 @@ def index(request, conn=None, **kwargs):
             annotation = conn.getObject("Annotation",annId)
             fpath = download_annotation(annotation)
             fname, fextension = os.path.splitext(fpath)
-            cols,message = parse_annotation(fpath,fextension,header_row,sheet)
+            cols,message,csv_path = parse_annotation(fpath,fextension,header_row,sheet)
             if cols is not None:
                 rv = {'success':True,'message':message,'selected': selected,'columns': cols}
                 data = json.dumps(rv)
@@ -273,7 +284,7 @@ def plot(request, conn=None, **kwargs):
     header_row = request.session['header']
     sheet = request.session['sheet']
     fname, fextension = os.path.splitext(fpath)
-    cols,message = parse_annotation(fpath,fextension,header_row,sheet)
+    cols,message,csv_path = parse_annotation(fpath,fextension,header_row,sheet)
     if request.POST:
         form = GraphForm(options=cols,data=request.POST.copy())
         if form.is_valid():
@@ -299,7 +310,8 @@ def plot(request, conn=None, **kwargs):
                   'xLabel': xLabel, 'yLabel': yLabel,\
                   'xdata': xdata, 'ydata': ydata,\
                   'num_series': len(ydata),'tick_size':tick_size,\
-                  'xmin': xmin, 'xmax': xmax,'graph_data': graph}
+                  'xmin': xmin, 'xmax': xmax,'graph_data': graph,\
+                  'csv_path': csv_path}
             data = json.dumps(rv)
             return HttpResponse(data, mimetype='application/json')
             
@@ -323,12 +335,13 @@ def preview(request, conn=None, **kwargs):
             fpath = download_annotation(annotation)
             fname, fextension = os.path.splitext(fpath)
             pdata = preview_data(fpath,fextension,sheet)
+            print len(pdata)
             if pdata is not None:
                 rv = {'preview_data': pdata}
                 data = json.dumps(rv)
                 return HttpResponse(data, mimetype='application/json')
             else:
-                rv = {'message':"Too many rows"}
+                rv = {'message':"Could not read file"}
                 error = json.dumps(rv)
                 return HttpResponseBadRequest(error, mimetype='application/json')
 

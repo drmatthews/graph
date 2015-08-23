@@ -21,8 +21,8 @@
 	    },
 
 	    initialize: function (options) {
-			this.graphModel = this.options.graphModel;
-			this.graphDialog = new graphSetupModalView({ model: this.graphModel });
+			//this.graphModel = this.options.graphModel;
+			//this.graphDialog = new graphSetupModalView({ model: this.graphModel });
 			//this.graphDialog();
 	    },
 
@@ -363,6 +363,18 @@
 	    },
 
 	    /*submit: function (e) {
+	    	e.preventDefault();
+			$.ajax({
+				traditional: true,
+				type: "POST",
+				url: "/graph/plot/",
+				data : {'x' : x, 'y': y},
+				success: function(plotresults) {
+					console.log(plotresults.csv_path)
+				}
+			});
+	    }*/
+	    submit: function (e) {
 			e.preventDefault();
 			console.log(this.model)
 			var model = this.model;
@@ -410,6 +422,6 @@
 			    console.log(error)
 			  }
 			});
-	    }*/
+	    }
 	});
 
