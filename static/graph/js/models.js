@@ -114,17 +114,18 @@
 			// Chart dimensions.
 			top: 20, 
 			right: 30, 
-			bottom: 20,
-			left: 50,
+			bottom: 60,
+			left: 80,
 			currentX: "radius", 
 			currentY: "ripley",
 			symbolsize: 8, //radius of circle
-			bigscale: 1.5 //how much to scale up on mouseover
+			bigscale: 1.5, //how much to scale up on mouseover
+			plot_data: [{'x': 1, 'y': 10},{'x': 2, 'y': 15},{'x': 3, 'y': 13},{'x': 4, 'y': 17}]
 		},
 
 		initialize: function(){
 			this.set({
-				width: 700 - this.get('right'),
+				width: 600 - this.get('right'),
 				height: 500 - this.get('top') - this.get('bottom')
 			});
 
@@ -189,15 +190,15 @@
 				.attr("class", "x label")
 				.attr("text-anchor", "middle")
 				.attr("x", this.get('width')/2 )
-				.attr("y", this.get('height')-10)
+				.attr("y", this.get('height') + 40)
 				.text("x axis");
 				
 			// Add a y-axis label.
 			svg.append("text")
 				.attr("class", "y label")
 				.attr("text-anchor", "middle")
-				.attr("x", - this.get('height')/2)
-				.attr("y", this.get('left')-30)
+				.attr("y", 0 - this.get('left') + 40)
+		        .attr("x",0 - (this.get('height') / 2))
 				.attr("transform", "rotate(-90)")
 				.text("y axis");
 				
@@ -224,6 +225,8 @@
 				.attr("height", this.get('height'))
 				.call(this.get('zoom'));
 			this.set({svg: svg});
+
+			this.plot();
 		},
 
 		draw_graph: function(){
@@ -249,6 +252,23 @@
 			svg.selectAll("text.FP")
 			    .attr("x", function (d) { return xScale (d[currentX]) - symbolsize/2; })
 			    .attr("y", function (d) { return yScale (d[currentY]) + symbolsize/2; })
+		},
+
+		plot: function(){
+			var data = this.get('plot_data'),
+				svg = this.get('svg'),
+				zoom = this.get('zoom'),
+				x = this.get('xScale'),
+				y = this.get('yScale'),
+				line = d3.svg.line()
+			    .x(function(d) { return x(d.x); })
+			    .y(function(d) { return y(d.y); });
+
+			x.domain(d3.extent(data, function(d) { return d.x; }));
+			zoom.x(this.get('xScale'));
+			y.domain(d3.extent(data, function(d) { return d.y; }));
+			zoom.y(this.get('yScale'));
+			svg.append("path").datum(data).attr("class", "line").attr("d", line);
 		}
 
 	});
