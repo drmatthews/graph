@@ -184,7 +184,7 @@
 				.attr("class", "y axis right")
 				.attr("transform", "translate(" + this.get('width') + ",0)")
 				.call(this.get('yAxis_right'));
-			console.log('yAxis_right',this.get('yAxis_right'))
+			
 			// Add an x-axis label.
 			svg.append("text")
 				.attr("class", "x label")
@@ -269,6 +269,22 @@
 			y.domain(d3.extent(data, function(d) { return d.y; }));
 			zoom.y(this.get('yScale'));
 			svg.append("path").datum(data).attr("class", "line").attr("d", line);
+		}
+
+		set_axis_text: function(xlabel,ylabel){
+			var svg = this.get('svg');
+
+			// need to remove the old axis labels first
+
+			// Add an x-axis label.
+			svg.append("text")
+				.attr("class", "x label")
+				.text(xLabel);
+				
+			// Add a y-axis label.
+			svg.append("text")
+				.text(ylabel);
+
 		}
 
 	});
