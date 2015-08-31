@@ -53,6 +53,18 @@ def upload_graph(conn, path):
     newImg = conn.createImageFromNumpySeq(plane_gen, imageName, sizeZ=sizeZ, sizeC=sizeC, sizeT=sizeT)
     print "New Image ID", newImg.getId()
     return newImg
+
+def d3_data(xdata,ydata):
+    # ydata is a list of lists - index of 0 is a short
+    # term fudge
+    d3data = []
+    for x,y in zip(xdata,ydata[0]):
+        d_dict = {}
+        d_dict['x'] = x
+        d_dict['y'] = y
+        d3data.append(d_dict)
+    return d3data
+
     
 def flot_data(xdata,ydata):
     
@@ -305,13 +317,14 @@ def plot(request, conn=None, **kwargs):
             xmax = max(xdata)
             ydata = get_column(fpath,fextension,y,header_row,sheet)
             graph = flot_data(xdata,ydata)
+            d3data = d3_data(xdata,ydata)
             rv = {'message': message,\
                   'title': title, 'x' : x, 'y' : y,\
                   'xLabel': xLabel, 'yLabel': yLabel,\
                   'xdata': xdata, 'ydata': ydata,\
                   'num_series': len(ydata),'tick_size':tick_size,\
                   'xmin': xmin, 'xmax': xmax,'graph_data': graph,\
-                  'csv_path': csv_path}
+                  'd3data': d3data,'csv_path': csv_path}
             data = json.dumps(rv)
             return HttpResponse(data, mimetype='application/json')
             

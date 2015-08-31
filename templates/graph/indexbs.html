@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'graph/css/bootstrap.css' %}"/>
     <link rel="stylesheet" type="text/css" href="{% static 'graph/css/bootstrap-theme.css' %}"/>
 	<link rel="stylesheet" type="text/css" href="{% static 'graph/css/bootstrap-chosen.css' %}"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'graph/css/c3.min.css' %}"/>
 	<link rel="stylesheet" type="text/css" href="{% static 'graph/css/graph.css' %}"/>
 
 	<style type="text/css" media="all">
@@ -21,6 +22,52 @@
 </head>
 
 <body>
+	<!-- help dialog -->
+	<div class="modal fade" id="help_modal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel">
+		<div class="modal-dialog">
+		    <div class="modal-content">
+			    <div class="modal-header">
+		    	    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        	<h4 class="modal-title" id="helpModalLabel">Help</h4>
+		    	</div>
+		    	<div class="modal-body">
+		        	<p>
+						<h4><p><ul>
+							<li>Select an annotation from the list and state which row holds the column names using 'Header'.</li>
+							<li>If the annotation is an Excel file you will also get to choose which sheet contains the data to be plotted.</li>
+							<li>Set 'Header' to 0 (zero) if there are no column names.</li>
+							<li>You can get a preview of what the data (stored in the annotation) looks like using the 'Preview' tab. This can help you decide which columns to plot and which row holds the column names (if any).</li>
+							<li>The graph is plotted using <a href="https://plot.ly">Plot.ly</a>. If you click 'Edit chart' on the bottom left of the chart area you will be taken to the Plot.ly website where you will be able to edit, save and share the chart.</li>
+						</ul></p></h4>
+		        	</p>
+		    	</div>
+		    	<div class="modal-footer">
+		        	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		    	</div>
+		    </div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+
+	<!-- annotations list dialog -->
+	<div class="modal fade" id="annolist_modal" tabindex="-1" role="dialog" aria-labelledby="annolistModalLabel">
+		<div class="modal-dialog">
+		    <div class="modal-content">
+			    <div class="modal-header">
+		    	    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        	<h4 class="modal-title" id="annolistModalLabel">All annotions for {{ userFullName }}</h4>
+		    	</div>
+		    	<div class="modal-body">
+		        	{% for annotation in annotations %}
+		        		<p> {{ annotation.getFile.getName }} </p>
+		        	{% endfor %}
+		    	</div>
+		    	<div class="modal-footer">
+		        	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		    	</div>
+		    </div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+
 	<!-- Preview data model -->
 	<div class="modal fade" id="preview_modal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel">
 	  <div class="modal-dialog" role="document">
@@ -68,7 +115,7 @@
 	  <div class="container-fluid">
 	    <!-- Brand and toggle get grouped for better mobile display -->
 	    <div class="navbar-header">
-	      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+	      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#omero-graph-collapse" aria-expanded="false">
 	        <span class="sr-only">Toggle navigation</span>
 	        <span class="icon-bar"></span>
 	        <span class="icon-bar"></span>
@@ -78,41 +125,21 @@
 	    </div>
 
 	    <!-- Collect the nav links, forms, and other content for toggling -->
-	    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+	    <div class="collapse navbar-collapse" id="omero-graph-collapse">
 	      <ul class="nav navbar-nav">
-	        <li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
-	        <li><a href="#">Link</a></li>
 	        <li class="dropdown">
-	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings <span class="caret"></span></a>
 	          <ul class="dropdown-menu">
-	            <li><a href="#">Action</a></li>
-	            <li><a href="#">Another action</a></li>
+	            <li><a href="#help_modal" data-toggle="modal">Usage</a></li>
+	            <li><a href="#annolist_modal" data-toggle="modal">List annotations</a></li>
 	            <li><a href="#">Something else here</a></li>
 	            <li role="separator" class="divider"></li>
 	            <li><a href="#">Separated link</a></li>
-	            <li role="separator" class="divider"></li>
-	            <li><a href="#">One more separated link</a></li>
 	          </ul>
 	        </li>
 	      </ul>
-	      <form class="navbar-form navbar-left" role="search">
-	        <div class="form-group">
-	          <input type="text" class="form-control" placeholder="Search">
-	        </div>
-	        <button type="submit" class="btn btn-default">Submit</button>
-	      </form>
 	      <ul class="nav navbar-nav navbar-right">
-	        <li><a href="#">Link</a></li>
-	        <li class="dropdown">
-	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
-	          <ul class="dropdown-menu">
-	            <li><a href="#">Action</a></li>
-	            <li><a href="#">Another action</a></li>
-	            <li><a href="#">Something else here</a></li>
-	            <li role="separator" class="divider"></li>
-	            <li><a href="#">Separated link</a></li>
-	          </ul>
-	        </li>
+	        <li><a href="http://localhost:4080/webclient">Back to OMERO</a></li>
 	      </ul>
 	    </div><!-- /.navbar-collapse -->
 	  </div><!-- /.container-fluid -->
@@ -143,13 +170,10 @@
 					<ul class="nav nav-tabs">
   						<li role="presentation" class="active"><a href="#annotation" role="tab" data-toggle="tab">Annotation</a></li>
   						<li role="presentation"><a href="#preview"role="tab" data-toggle="tab">Preview</a></li>
+  						<li role="presentation"><a href="#graph_settings"role="tab" data-toggle="tab">Graph setup</a></li>
   					</ul>
   					<div class="tab-content">
   						<div role="tabpanel" class="tab-pane active" id="annotation">
-  							<h4><p><ul>
-  								<li>Select an annotation from the list and state which row holds the column names.</li>
-								<li>Set 'Header' to 0 (zero) if there are no column names.</li>
-							</ul></p></h4>
 							<p><form action="{% url 'find' %}" method="POST" id="annotation_form">{% csrf_token %}
 						        {% for field in form %}
 						            {% if field.errors %}
@@ -211,12 +235,7 @@
 		    					</div>
 							</form></p>
 						</div>
-					</div>
-					<ul class="nav nav-tabs" id='#graph_settings_tab'>
-  						<li role="presentation" class="active"><a href="#Graph_settings" role="tab" data-toggle="tab">Graph settings</a></li>
-  					</ul>
-  					<div class="tab-content" id='#graph_settings_tab_content'>
-  						<div role="tabpanel" class="tab-pane active" id="Graph_settings">
+  						<div role="tabpanel" class="tab-pane" id="graph_settings">
 
 						</div>
 					</div>
@@ -260,7 +279,6 @@
 	<script src="{% static 'graph/js/html2canvas.js' %}"></script>
 	<script type="text/javascript" src="{% static '3rdparty/jquery.chosen-1.2.0/chosen.jquery.js' %}"></script>
 	<script src="{% static 'graph/js/d3.min.js' %}"></script>
-	<!--<script src="{% static 'graph/js/fpvis.js' %}"></script>-->
 	<script src="{% static 'graph/js/plotly.min.js' %}"></script>
 	<script src="{% static 'graph/js/models.js' %}"></script>
 	<script src="{% static 'graph/js/views.js' %}"></script>

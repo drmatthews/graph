@@ -21,9 +21,8 @@
 	    },
 
 	    initialize: function (options) {
-			//this.graphModel = this.options.graphModel;
-			//this.graphDialog = new graphSetupModalView({ model: this.graphModel });
-			//this.graphDialog();
+			this.graphModel = this.options.graphModel;
+			this.graphDialog = new graphSetupModalView({ model: this.graphModel });
 	    },
 
 	    submit: function (e) {
@@ -31,7 +30,7 @@
 			var header = $('#id_header').val(),
 				sheet = $('#id_sheet').val(),
 				annotation = $('#id_annotation').val(),
-				graphDialog = this.graphDialog;
+				graphDialog = this.graphDialog,
 				model = this.model;
 			console.log(annotation,header,sheet)
 			$.ajax({
@@ -54,7 +53,7 @@
 					$("#id_y").trigger("chosen:updated");
 					$('#id_y').val('').trigger('liszt:updated');
 					graphDialog.show();
-					model.save({'title': results.selected, 'xoptions': columns, 'yoptions': columns })
+					model.save({'title': results.selected, 'xoptions': columns, 'yoptions': columns });
 			  },
 	          statusCode: {
 	              400: function() {
@@ -163,16 +162,22 @@
 					    return series;
 					};
 					
-					var ydata = generateData(plotresults.graph_data),
+					var xdata = plotresults.xdata,//generateData(plotresults.graph_data),
+						ydata = plotresults.ydata,
+						num_traces = plotresults.num_series,
+						//d3data = plotresults.d3data,
 						xmax = plotresults.xmax,
 						useCanvas = false,
 						axisLabelPadding = 5,
 						title = plotresults.title,
 						xLabel = plotresults.xLabel,
 						yLabel = plotresults.yLabel;
-					model.set({'title': title, 'xLabel': xLabel, 'yLabel': yLabel, 'useCanvas': useCanvas,
-					'axisLabelPadding': axisLabelPadding, 'ydata': ydata, 'xmax': xmax, 'tickSize': tick_size});
-					model.plotGraph();
+					model.set({'title': title, 'x': xdata, 'y': ydata, 'currentXlabel': xLabel, 'currentYlabel': yLabel, 'num_traces': num_traces});
+					model.update();
+					//model.plot();
+					//model.set({'title': title, 'xLabel': xLabel, 'yLabel': yLabel, 'useCanvas': useCanvas,
+					//'axisLabelPadding': axisLabelPadding, 'ydata': ydata, 'xmax': xmax, 'tickSize': tick_size});
+					//model.plotGraph();
 					el.modal('hide');
 			  },
 			  error: function(error) {

@@ -86,9 +86,31 @@
 	var PlotlyModel = Backbone.Model.extend({
 		//url: "/graph/plot",
 		defaults: {
+			num_traces: 1,
 			x: [1, 2, 3, 4],
 			y: [10, 15, 13, 17],
-			type: 'scatter'
+			currentXlabel: 'x axis label',
+			currentYlabel: 'y axis label',
+			title: 'chart title',
+			type: 'scatter',
+			layout: {
+				title: 'chart title',
+				autosize: false,
+				width: 700,
+				height: 500,
+				xaxis: {
+					title: 'x axis label',
+					showline: true,
+					ticks: 'outside',
+					mirror: 'all'
+				},
+				yaxis: {
+					title: 'y axis label',
+					showline: true,
+					ticks: 'outside',
+					mirror: 'all'
+				}
+			}
 		},
 		initialize: function(){
 			this.Plot();
@@ -101,190 +123,91 @@
 		},*/
 		Plot: function(){
 			var trace = {x: this.get('x'), y: this.get('y'),type: this.get('type')},
-				data = [trace];
+				data = [trace],
+				layout = this.get('layout');
 
 			$(".graph-container").show();
-			$("#graph_toolbar").show();
-			Plotly.newPlot('graph_container', data);
+			$("#graph_toolbar").hide();
+			Plotly.newPlot('graph_container', data, layout);
+		},
+
+		update: function(){
+			var graphDiv = 'graph_container',
+				xdata = this.get('x'),
+				ydata = this.get('y'),
+				xmin = Math.min.apply(Math,xdata),
+				xmax = Math.max.apply(Math,xdata);
+				num_traces = this.get('num_traces');
+			Plotly.deleteTraces(graphDiv, 0);
+
+			var ymin = [],
+				ymax = [];
+			for (t = 0; t < num_traces; t++){
+				Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t]});
+				ymin.push(Math.min.apply(Math,ydata[t]));
+				ymax.push(Math.max.apply(Math,ydata[t]));
+			}
+
+			var title = this.get('title'),
+				xLabel = this.get('currentXlabel'),
+				yLabel = this.get('currentYlabel');
+			var update = {
+			    title: title,
+			    'xaxis.range': [xmin, xmax],
+			    'yaxis.range': [Math.min.apply(Math,ymin), Math.max.apply(Math,ymax)],
+			    'xaxis.title': xLabel,
+			    'yaxis.title': yLabel
+			};
+			Plotly.relayout(graphDiv, update)
 		}
 	});
 
-	var d3Model = Backbone.Model.extend({
+	var c3Model = Backbone.Model.extend({
 		defaults: {
-			// Chart dimensions.
-			top: 20, 
-			right: 30, 
-			bottom: 60,
-			left: 80,
-			currentX: "radius", 
-			currentY: "ripley",
-			symbolsize: 8, //radius of circle
-			bigscale: 1.5, //how much to scale up on mouseover
-			plot_data: [{'x': 1, 'y': 10},{'x': 2, 'y': 15},{'x': 3, 'y': 13},{'x': 4, 'y': 17}]
+			place_holder: '#graph_placeholder',
+			data: [['data1', 30, 200, 100, 400, 150, 250]],
+			xLabel: 'x axis label',
+			yLabel: 'y axis label'
 		},
-
 		initialize: function(){
-			this.set({
-				width: 600 - this.get('right'),
-				height: 500 - this.get('top') - this.get('bottom')
-			});
-
-			this.set({
-				//Scales and axes
-				xScale: d3.scale.linear().range([0, this.get('width')]),
-				yScale: d3.scale.linear().range([this.get('height'), 0]),
-
-				//This scale will set the saturation (gray to saturated color).  
-				// We will use it for mapping brightness.
-				saturationScale: d3.scale.linear().range([0, 1]).domain([0, 100]),
-
-				//This scale will set the hue.  We will use it for mapping emission wavelength.
-				hueScale: d3.scale.linear().range([300, 300, 240, 0, 0]).domain([200, 405, 440, 650, 850])
-			});
-
-			var xAxis_bottom = d3.svg.axis().scale(this.get('xScale')).tickSize(5).tickSubdivide(true);
-			var yAxis_left = d3.svg.axis().scale(this.get('yScale')).tickSize(5).orient("left").tickSubdivide(true);
-
-			//top and right axes are identical but without tick labels
-			var xAxis_top = d3.svg.axis().scale(this.get('xScale')).tickSize(5).orient("top").tickSubdivide(true).tickFormat(function (d) { return ''; });;;
-			var yAxis_right = d3.svg.axis().scale(this.get('yScale')).tickSize(5).orient("right").tickSubdivide(true).tickFormat(function (d) { return ''; });;
-
-			var svg = d3.select("#graph_placeholder").append("svg")
-					.attr("width", this.get('width') + this.get('left') + this.get('right'))
-					.attr("height", this.get('height') + this.get('top') + this.get('bottom'))
-					.append("g")
-					.attr("transform", "translate(" + this.get('left') + "," + this.get('top') + ")");
-
-			this.set({
-				//X and Y axes
-				xAxis_bottom: xAxis_bottom,
-				yAxis_left: yAxis_left,
-				xAxis_top: xAxis_top,
-				yAxis_right: yAxis_right,
-
-				// Create the SVG container and set the origin.
-				svg: svg
-			});
-			//Add the axes
-			var svg = this.get('svg');
-			console.log('xAxis_top',this.get('xAxis_top'))
-			console.log('xScale',this.get('xScale'))
-			svg.append("g")
-				.attr("class", "x axis bottom")
-				.attr("transform", "translate(0," + this.get('height') + ")")
-				.call(this.get('xAxis_bottom'));
-			console.log('height',this.get('height'))		
-			svg.append("g")
-				.attr("class", "y axis left")
-				.call(this.get('yAxis_left'));
-			svg.append("g")
-				.attr("class", "x axis top")
-				.call(this.get('xAxis_top'));
-			svg.append("svg:g")
-				.attr("class", "y axis right")
-				.attr("transform", "translate(" + this.get('width') + ",0)")
-				.call(this.get('yAxis_right'));
-			
-			// Add an x-axis label.
-			svg.append("text")
-				.attr("class", "x label")
-				.attr("text-anchor", "middle")
-				.attr("x", this.get('width')/2 )
-				.attr("y", this.get('height') + 40)
-				.text("x axis");
-				
-			// Add a y-axis label.
-			svg.append("text")
-				.attr("class", "y label")
-				.attr("text-anchor", "middle")
-				.attr("y", 0 - this.get('left') + 40)
-		        .attr("x",0 - (this.get('height') / 2))
-				.attr("transform", "rotate(-90)")
-				.text("y axis");
-				
-			//Add a clipping path so that data points don't go outside of frame
-			svg.append("clipPath")                  //Make a new clipPath
-				.attr("id", "chart-area")           //Assign an ID
-					.append("rect")                     
-					.attr("width", this.get('width'))
-					.attr("height", this.get('height'));
-			this.set({svg: svg});
-
-			//enable zooming	
-			this.set({
-				zoom: d3.behavior.zoom()
-				.x(this.get('xScale'))
-				.y(this.get('yScale'))
-				.scaleExtent([1, 10])
-				.on("zoom", this.draw_graph())
-			});
-
-			svg.append("rect")
-				.attr("class", "pane")
-				.attr("width", this.get('width'))
-				.attr("height", this.get('height'))
-				.call(this.get('zoom'));
-			this.set({svg: svg});
-
-			this.plot();
+			this.generate()
 		},
-
-		draw_graph: function(){
-			//redraw axes with new domains
-			var svg = this.get('svg'),
-				xAxis_bottom = this.get('xAxis_bottom'),
-				yAxis_left = this.get('yAxis_left'),
-				xAxis_top = this.get('xAxis_top'),
-				yAxis_right = this.get('yAxis_right');
-			svg.select(".x.axis.bottom").call(xAxis_bottom);
-			svg.select(".y.axis.left").call(yAxis_left);
-			svg.select(".x.axis.top").call(xAxis_top);
-			svg.select(".y.axis.right").call(yAxis_right);
-			
-			svg.selectAll("circle.FP")
-				.attr("cx", function (d) { return xScale (d[currentX]); })
-				.attr("cy", function (d) { return yScale (d[currentY]); })
-
-			svg.selectAll("rect.FP")
-			    .attr("x", function (d) { return xScale (d[currentX]) - symbolsize; })
-			    .attr("y", function (d) { return yScale (d[currentY]) - symbolsize; })
-				
-			svg.selectAll("text.FP")
-			    .attr("x", function (d) { return xScale (d[currentX]) - symbolsize/2; })
-			    .attr("y", function (d) { return yScale (d[currentY]) + symbolsize/2; })
+		generate: function(){
+			var cols = this.get('data'),
+				place_holder = this.get('place_holder'),
+				xLabel = this.get('xLabel'),
+				yLabel = this.get('yLabel');
+			var chart = c3.generate({
+			    bindto: place_holder,
+			    data: {
+				    columns: cols,
+			    },
+			    axis: {
+					x: {
+						label: {
+							text: xLabel,
+							position: 'outer-center'
+						},
+					},
+					y: {
+						label: {
+							text: yLabel,
+							position: 'outer-middle'
+						},
+					},
+					x2: {
+						tick: {
+							values: []
+						},
+						show: true
+					},
+					y2: {
+						tick: {
+							values: []
+						},
+						show: true
+					}
+				}
+			});
 		},
-
-		plot: function(){
-			var data = this.get('plot_data'),
-				svg = this.get('svg'),
-				zoom = this.get('zoom'),
-				x = this.get('xScale'),
-				y = this.get('yScale'),
-				line = d3.svg.line()
-			    .x(function(d) { return x(d.x); })
-			    .y(function(d) { return y(d.y); });
-
-			x.domain(d3.extent(data, function(d) { return d.x; }));
-			zoom.x(this.get('xScale'));
-			y.domain(d3.extent(data, function(d) { return d.y; }));
-			zoom.y(this.get('yScale'));
-			svg.append("path").datum(data).attr("class", "line").attr("d", line);
-		}
-
-		set_axis_text: function(xlabel,ylabel){
-			var svg = this.get('svg');
-
-			// need to remove the old axis labels first
-
-			// Add an x-axis label.
-			svg.append("text")
-				.attr("class", "x label")
-				.text(xLabel);
-				
-			// Add a y-axis label.
-			svg.append("text")
-				.text(ylabel);
-
-		}
-
 	});
