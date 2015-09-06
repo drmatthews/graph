@@ -8,4 +8,6 @@ $(function(){
 	//new AnnotationView({ model: Ann });
 	new PreviewView();
 	//new GraphPlotView({ model: Graph });
+	new graphSettingsEditView({ model: Plotly});
+	new omeroExportView({ model: Plotly });
 });

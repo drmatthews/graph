@@ -21,12 +21,17 @@ class AnnotationsForm(forms.Form):
 class GraphForm(forms.Form):
     def __init__(self, options=None, *args, **kwargs):
         super(GraphForm, self).__init__(*args, **kwargs)
-        self.fields['x'].choices = options
-        self.fields['y'].choices = options
+        self.fields['x_data'].choices = options
+        self.fields['y_data'].choices = options
 
-    x = ChoiceField(choices=(),required=True)
-    y = MultipleChoiceField(choices=(),required=True)
     title = CharField(max_length=200,required=False)
-    xLabel = CharField(max_length=50,required=False)
-    yLabel = CharField(max_length=50,required=False)
-    tick_size = IntegerField(required=False,min_value=1)
+    x_Label = CharField(max_length=50,required=False)
+    y_Label = CharField(max_length=50,required=False)
+    #tick_size = IntegerField(required=False,min_value=1)
+    plot_type = ChoiceField(choices=(('',''),('bar','bar'),
+                                            ('line','line'),\
+                                            ('scatter','scatter'),\
+                                            ('scatter+line','scatter+line')),\
+                                            required=True)
+    x_data = ChoiceField(choices=(),required=True)
+    y_data = MultipleChoiceField(choices=(),required=True)

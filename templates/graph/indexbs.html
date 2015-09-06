@@ -28,16 +28,17 @@
 		    <div class="modal-content">
 			    <div class="modal-header">
 		    	    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-		        	<h4 class="modal-title" id="helpModalLabel">Help</h4>
+		        	<h4 class="modal-title" id="helpModalLabel">Usage</h4>
 		    	</div>
 		    	<div class="modal-body">
 		        	<p>
 						<h4><p><ul>
+							<li>This app retrieves all CSV, Excel or TXT files that you have stored in OMERO (you must be logged in) and allows you to make graphs from the data contained therein. You can export the graph back to OMERO (as PNG --> look in 'Orphaned images').</li>
+							<li>The graph is plotted using <a href="https://plot.ly">Plot.ly</a>. If you click 'Edit chart' on the bottom right of the chart area you will be taken to the Plot.ly website where you will be able to further edit the graph, save and even share the chart with your colleagues.</li>
 							<li>Select an annotation from the list and state which row holds the column names using 'Header'.</li>
 							<li>If the annotation is an Excel file you will also get to choose which sheet contains the data to be plotted.</li>
 							<li>Set 'Header' to 0 (zero) if there are no column names.</li>
-							<li>You can get a preview of what the data (stored in the annotation) looks like using the 'Preview' tab. This can help you decide which columns to plot and which row holds the column names (if any).</li>
-							<li>The graph is plotted using <a href="https://plot.ly">Plot.ly</a>. If you click 'Edit chart' on the bottom left of the chart area you will be taken to the Plot.ly website where you will be able to edit, save and share the chart.</li>
+							<li>You can get a preview of what the data (stored in the annotation) looks like by choosing the annotion from the list and pressing 'Preview'. This can help you decide which columns to plot and which row holds the column names (if any).</li>
 						</ul></p></h4>
 		        	</p>
 		    	</div>
@@ -78,7 +79,9 @@
 	     </div>
 	     <div class="modal-body">
 	     	<div id='prev_text'>
+	     		<table class="table table-bordered" id="prev_table">
 	    		<!-- content provided by backbone -->
+	    		</table>
 	    	</div>
 	     </div>
 	     <div class="modal-footer">
@@ -97,11 +100,16 @@
 		        	<h4 class="modal-title" id="graphModalLabel">Graph settings</h4>
 		    	</div>
 		    	<div class="modal-body">
-		        	<p>
+		        	<div class="form-horizontal">
 						<form action="" method="POST" id="plotform">{% csrf_token %}
-							{{ graph_form.as_p}}
+							{% for field in graph_form %}
+								<div class="form-group">
+									<label class="col-sm-2 control-label">{{ field.label }}</label>
+			                    	<div class="col-sm-10 controls">{{ field }}</div>
+								</div>
+							{% endfor %}
 						</form>
-		        	</p>
+		        	</div>
 		    	</div>
 		    	<div class="modal-footer">
 		        	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -128,13 +136,10 @@
 	    <div class="collapse navbar-collapse" id="omero-graph-collapse">
 	      <ul class="nav navbar-nav">
 	        <li class="dropdown">
-	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings <span class="caret"></span></a>
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Options <span class="caret"></span></a>
 	          <ul class="dropdown-menu">
 	            <li><a href="#help_modal" data-toggle="modal">Usage</a></li>
 	            <li><a href="#annolist_modal" data-toggle="modal">List annotations</a></li>
-	            <li><a href="#">Something else here</a></li>
-	            <li role="separator" class="divider"></li>
-	            <li><a href="#">Separated link</a></li>
 	          </ul>
 	        </li>
 	      </ul>
@@ -168,43 +173,11 @@
 					</div>
 					<span id="test"></span>
 					<ul class="nav nav-tabs">
-  						<li role="presentation" class="active"><a href="#annotation" role="tab" data-toggle="tab">Annotation</a></li>
-  						<li role="presentation"><a href="#preview"role="tab" data-toggle="tab">Preview</a></li>
-  						<li role="presentation"><a href="#graph_settings"role="tab" data-toggle="tab">Graph setup</a></li>
+   						<li role="presentation" class="active"><a href="#annotation" role="tab" data-toggle="tab">Chart data</a></li>
+  						<li role="presentation"><a href="#graph_settings"role="tab" data-toggle="tab">Chart settings</a></li>
   					</ul>
   					<div class="tab-content">
-  						<div role="tabpanel" class="tab-pane active" id="annotation">
-							<p><form action="{% url 'find' %}" method="POST" id="annotation_form">{% csrf_token %}
-						        {% for field in form %}
-						            {% if field.errors %}
-						                <div class="form-group has-error">
-						                    <label class="control-label">{{ field.label }}</label> 
-						                    <div class="controls">{{ field }}
-						                        <span class="help-inline">
-						                            {% for error in  field.errors %}{{ error }}{% endfor %}
-						                        </span>
-						                    </div>
-						                </div>
-						            {% else %}
-						                <div class="form-group">
-						                	{% ifequal field.label_tag form.sheet.label_tag %}
-						                		<div class="sheet">
-													<label class="control-label">{{ field.label }}</label> 
-							                    	<div class="controls">{{ field }}</div>
-						                    	</div>
-											{% else %}
-												<label class="control-label">{{ field.label }}</label>
-						                    	<div class="controls">{{ field }}</div>
-											{% endifequal %}
-						                </div>
-						            {% endif %}
-						        {% endfor %}
-								<div class="form-actions">
-		        					<button type="submit" class="btn btn-primary" >Plot</button>
-		    					</div>
-							</form></p>
-						</div>
-						<div role="tabpanel" class="tab-pane" id="preview">
+						<div role="tabpanel" class="tab-pane active" id="annotation">
 							<p><form action="{% url 'preview' %}" method="POST" id="preview_form">{% csrf_token %}
 						        {% for field in prev_form %}
 						            {% if field.errors %}
@@ -234,9 +207,63 @@
 		        					<button type="submit" class="btn btn-primary" >Preview</button>
 		    					</div>
 							</form></p>
+							<p><form action="{% url 'find' %}" method="POST" id="annotation_form">{% csrf_token %}
+						        {% for field in form %}
+						            {% if field.errors %}
+						                <div class="form-group has-error">
+						                    <label class="control-label">{{ field.label }}</label> 
+						                    <div class="controls">{{ field }}
+						                        <span class="help-inline">
+						                            {% for error in  field.errors %}{{ error }}{% endfor %}
+						                        </span>
+						                    </div>
+						                </div>
+						            {% else %}
+						                <div class="form-group">
+						                	{% ifequal field.label_tag form.sheet.label_tag %}
+						                		<div class="sheet">
+													<label class="control-label">{{ field.label }}</label> 
+							                    	<div class="controls">{{ field }}</div>
+						                    	</div>
+											{% else %}
+												<label class="control-label">{{ field.label }}</label>
+						                    	<div class="controls">{{ field }}</div>
+											{% endifequal %}
+						                </div>
+						            {% endif %}
+						        {% endfor %}
+								<div class="form-actions">
+		        					<button type="submit" class="btn btn-primary" >Get data from OMERO</button>
+		    					</div>
+							</form></p>
 						</div>
   						<div role="tabpanel" class="tab-pane" id="graph_settings">
-
+  							<p></p>
+							<form class="form-horizontal">
+							  <div class="form-group">
+							    <label for="inputTitle" class="col-sm-2 control-label">Title:</label>
+							    <div class="col-sm-10">
+							      <input type="text" class="form-control" id="inputTitle" placeholder="chart title">
+							    </div>
+							  </div>
+							  <div class="form-group">
+							    <label for="inputXlabel" class="col-sm-2 control-label">xLabel:</label>
+							    <div class="col-sm-10">
+							      <input type="text" class="form-control" id="inputXlabel" placeholder="x axis label">
+							    </div>
+							  </div>
+							  <div class="form-group">
+							    <label for="inputYlabel" class="col-sm-2 control-label">yLabel:</label>
+							    <div class="col-sm-10">
+							      <input type="text" class="form-control" id="inputYlabel" placeholder="y axis label">
+							    </div>
+							  </div>
+							  <div class="form-group">
+							    <div class="col-sm-offset-2 col-sm-10">
+							      <button id="updateButton" type="submit" class="btn btn-primary">Update</button>
+							    </div>
+							  </div>
+							</form>
 						</div>
 					</div>
 				{% else %}
@@ -245,38 +272,16 @@
 			</div>
 			<div class="col-xs-12 col-md-8">
 				<div class="graph-container" id="graph_container">
-					<div id="graph_placeholder" class="graph-placeholder"></div>
-					<div id="graph_toolbar" class="graph-toolbar">
-						<div class="tooltip-container">
-							<p><label><input id="enableTooltip" type="checkbox" checked="checked"></input>Enable tooltip</label></p>
-						</div>
-			            <a class="btn btn_text silver" id="graph_save">
-			                <span>Export to OMERO</span>
-			            </a>
-			            <a class="btn btn_text silver" id="graph_edit">
-			                <span>Edit</span>
-			            </a>
-					</div>
+					<div class="export">
+			        	<button class="btn btn-primary btn-sm" id="graph_save">Export to OMERO</button>
+			        </div>
 				</div>
 			</div>
-			<!--<div class="col-xs-6 col-md-4">
-				<div id="graph_edit_dialog" class="graph-dialog" title="Graph settings">
-					<p><label for="graph_title">Title</label>
-					   <input type='text' id="graph_title" /></p>
-					<p><label for="graph_xLabel">X Label</label>
-					   <input type='text' id="graph_xLabel"/></p>
-					<p><label for="graph_yLabel">Y Label</label>
-					   <input type='text' id="graph_yLabel"/></p>
-				</div>
-			</div>-->
 		</div>
 	</div>	
 	<script src="{% static 'graph/js/bootstrap.js' %}"></script>
-	<script src="{% static 'graph/js/jquery.flot.js' %}"></script>
-	<script src="{% static 'graph/js/jquery.flot.axislabels.js' %}"></script>
 	<script src="{% static 'graph/js/underscore.js' %}"></script>
 	<script src="{% static 'graph/js/backbone.js' %}"></script>
-	<script src="{% static 'graph/js/html2canvas.js' %}"></script>
 	<script type="text/javascript" src="{% static '3rdparty/jquery.chosen-1.2.0/chosen.jquery.js' %}"></script>
 	<script src="{% static 'graph/js/d3.min.js' %}"></script>
 	<script src="{% static 'graph/js/plotly.min.js' %}"></script>
@@ -298,16 +303,14 @@
 
 			$("#id_preview_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to preview'});
 			$("#id_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to plot'});
-			$("#id_x").chosen({disable_search_threshold: 10,placeholder_text:'Choose data for x axis',width: "100px"});
-			$("#id_y").chosen({disable_search_threshold: 10,placeholder_text:'Choose columns to plot',width: "300px"});
+			$("#id_x_data").chosen({disable_search_threshold: 10,placeholder_text:'Choose data for x axis',width: "100px"});
+			$("#id_y_data").chosen({disable_search_threshold: 10,placeholder_text:'Choose columns to plot',width: "300px"});
+			$("#id_plot_type").chosen({disable_search_threshold: 10,placeholder_text:'Choose type of graph',width: "100px"});
 			$("#preview_sheet").hide();
 			$(".sheet").hide();
 			$("#graph_setup").hide();
 			//$(".graph-container").hide();
-			$("#graph_toolbar").hide();
-			$("#graph_settings_tab li.active").removeClass('active');
-			//$("#graph_settings_tab").hide();
-			//$("#graph_settings_tab_content").hide();
+			$("#graph_toolbar").show();
 			
 			if ($('#id_annotation').val().indexOf('xls')>0) {
 						$("#preview_sheet").show();

@@ -3,96 +3,18 @@
 		url: "/graph/find"
 	});
 
-	var GraphModel = Backbone.Model.extend({
-		//url: "/graph/plot",
-		defaults: {
-			colors: ['rgb(237,194,64)'],
-			ydata: [{label: "Series0", data: [[0, 3], [4, 8], [8, 5], [9, 13]]}],
-			xLabel: 'x variable',
-			yLabel: 'y variable',
-			xmax: 1000,
-			title: 'graph title',
-			useCanvas: false,
-			axisLabelPadding: 5,
-			tickSize: 1
-		},
-		initialize: function(){
-			this.plotGraph();
-		},
-		/*initialize: function(){
-			this.on("change:title", function(model){
-				console.log(model.get("title"))
-				alert("title changed to" + model.get("title") );
-			});
-		},*/
-		plotGraph: function(){
-			var x = this.get('xLabel');
-			var y = this.get('yLabel');
-			var xmax = this.get('xmax');
-			var ydata = this.get('ydata');
-			var useCanvas = this.get('useCanvas');
-			console.log("ydata",ydata)
-			var axisLabelPadding = this.get('axisLabelPadding');
-			var tickSize = this.get('tickSize');
-			var options = {
-				axisLabels: {
-				            show: true
-				        },
-				xaxes: [{
-		            axisLabel: x,
-					axisLabelUseCanvas: useCanvas,
-					axisLabelPadding: axisLabelPadding
-				        }],
-		        yaxes: [{
-		            position: 'left',
-		            axisLabel: y,
-					axisLabelUseCanvas: useCanvas,
-					axisLabelPadding: axisLabelPadding
-		        }],
-				series: {
-					lines: {
-						show: true
-					},
-					points: {
-						show: true
-					}
-				},
-				colors: this.get('colors'),
-				grid: {
-					hoverable: true,
-					clickable: true
-				},
-				xaxis: {
-					tickDecimals: 0,
-					tickSize: tickSize
-		        }
-			};
-
-			$(".graph-container").show();
-			$("#graph_toolbar").show();
-			var plot = $.plot("#graph_placeholder", ydata, options);
-			var canvas = plot.getCanvas();
-			var c = canvas.getContext("2d");
-			var cx = canvas.width / 2;
-			var cy = canvas.height;
-			var title = this.get('title');
-			var xlabel = x;
-			c.font = "bold 16px sans-serif";
-			c.textAlign = 'center';
-		    c.fillText(title,cx,30);
-		}
-	});
-
 	var PlotlyModel = Backbone.Model.extend({
 		//url: "/graph/plot",
 		defaults: {
 			num_traces: 1,
 			x: [1, 2, 3, 4],
-			y: [10, 15, 13, 17],
+			y: [[10, 15, 13, 17]],
 			currentXlabel: 'x axis label',
 			currentYlabel: 'y axis label',
 			title: 'chart title',
+			graph_type: 'scatter+line',
 			type: 'scatter',
+			mode: 'lines+markers',
 			layout: {
 				title: 'chart title',
 				autosize: false,
@@ -113,21 +35,46 @@
 			}
 		},
 		initialize: function(){
-			this.Plot();
-		},
-		/*initialize: function(){
-			this.on("change:title", function(model){
-				console.log(model.get("title"))
-				alert("title changed to" + model.get("title") );
-			});
-		},*/
-		Plot: function(){
-			var trace = {x: this.get('x'), y: this.get('y'),type: this.get('type')},
-				data = [trace],
+			var xdata = this.get('x'), 
+				ydata = this.get('y'),
+				type = this.get('type'),
+				data = [],
+				num_traces = this.get('num_traces'),
+				mode = this.get('mode'),
 				layout = this.get('layout');
 
+			for (t = 0; t < num_traces; t++){
+				var trace = {};
+				trace.x = xdata;
+				trace.y = ydata[t];
+				trace.type = type;
+				trace.mode = mode;
+				data.push(trace);
+			}
+			console.log(data)
 			$(".graph-container").show();
-			$("#graph_toolbar").hide();
+			Plotly.newPlot('graph_container', data, layout);
+		},
+
+		Plot: function(){
+			var xdata = this.get('x'), 
+				ydata = this.get('y'),
+				type = this.get('type'),
+				data = [],
+				num_traces = this.get('num_traces'),
+				mode = this.get('mode'),
+				layout = this.get('layout');
+
+			for (t = 0; t < num_traces; t++){
+				var trace = {};
+				trace.x = xdata;
+				trace.y = ydata[t];
+				trace.type = type;
+				trace.mode = mode;
+				data.push(trace);
+			}
+			console.log(data)
+			$(".graph-container").show();
 			Plotly.newPlot('graph_container', data, layout);
 		},
 
@@ -136,17 +83,53 @@
 				xdata = this.get('x'),
 				ydata = this.get('y'),
 				xmin = Math.min.apply(Math,xdata),
-				xmax = Math.max.apply(Math,xdata);
+				xmax = Math.max.apply(Math,xdata),
+				graph_type = this.get('graph_type'),
 				num_traces = this.get('num_traces');
-			Plotly.deleteTraces(graphDiv, 0);
 
-			var ymin = [],
-				ymax = [];
 			for (t = 0; t < num_traces; t++){
-				Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t]});
-				ymin.push(Math.min.apply(Math,ydata[t]));
-				ymax.push(Math.max.apply(Math,ydata[t]));
+				Plotly.deleteTraces(graphDiv, t);
 			}
+
+			if (graph_type != 'bar'){
+				if (graph_type == 'line'){
+					var ymin = [],
+						ymax = [],
+						mode = 'lines';
+					for (t = 0; t < ydata.length; t++){
+						Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t], 'type': 'scatter',
+													'mode': mode});
+						ymin.push(Math.min.apply(Math,ydata[t]));
+						ymax.push(Math.max.apply(Math,ydata[t]));
+					}
+				}	
+
+				else if (graph_type == 'scatter'){
+					var ymin = [],
+						ymax = [],
+						mode = 'markers';
+					for (t = 0; t < ydata.length; t++){
+						Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t], 'mode': mode,
+													'type': 'scatter'});
+						ymin.push(Math.min.apply(Math,ydata[t]));
+						ymax.push(Math.max.apply(Math,ydata[t]));
+					}					
+				}
+
+				else if (graph_type == 'scatter+line'){
+					var ymin = [],
+						ymax = [],
+						mode = 'lines+markers';
+					for (t = 0; t < ydata.length; t++){
+						Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t], 'mode': mode,
+													'type': 'scatter'});
+						ymin.push(Math.min.apply(Math,ydata[t]));
+						ymax.push(Math.max.apply(Math,ydata[t]));
+					}					
+				}
+			}
+			this.set({mode: mode});
+			this.set({num_traces: ydata.length});
 
 			var title = this.get('title'),
 				xLabel = this.get('currentXlabel'),
@@ -159,55 +142,18 @@
 			    'yaxis.title': yLabel
 			};
 			Plotly.relayout(graphDiv, update)
-		}
-	});
+		},
 
-	var c3Model = Backbone.Model.extend({
-		defaults: {
-			place_holder: '#graph_placeholder',
-			data: [['data1', 30, 200, 100, 400, 150, 250]],
-			xLabel: 'x axis label',
-			yLabel: 'y axis label'
-		},
-		initialize: function(){
-			this.generate()
-		},
-		generate: function(){
-			var cols = this.get('data'),
-				place_holder = this.get('place_holder'),
-				xLabel = this.get('xLabel'),
-				yLabel = this.get('yLabel');
-			var chart = c3.generate({
-			    bindto: place_holder,
-			    data: {
-				    columns: cols,
-			    },
-			    axis: {
-					x: {
-						label: {
-							text: xLabel,
-							position: 'outer-center'
-						},
-					},
-					y: {
-						label: {
-							text: yLabel,
-							position: 'outer-middle'
-						},
-					},
-					x2: {
-						tick: {
-							values: []
-						},
-						show: true
-					},
-					y2: {
-						tick: {
-							values: []
-						},
-						show: true
-					}
-				}
-			});
-		},
+		update_title_and_axis: function(){
+			var graphDiv = 'graph_container',
+				title = this.get('title'),
+				xLabel = this.get('currentXlabel'),
+				yLabel = this.get('currentYlabel'),
+				update = {
+				    title: title,
+				    'xaxis.title': xLabel,
+				    'yaxis.title': yLabel
+			};
+			Plotly.relayout(graphDiv, update)			
+		}
 	});
