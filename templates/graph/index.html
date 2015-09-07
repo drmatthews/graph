@@ -1,114 +1,316 @@
-{% extends "graph/base.html" %}
-{% load i18n %}
+<!DOCTYPE html>
 
-{% block title %}
-    Graph
-{% endblock %}
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OMERO.graph</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'graph/css/bootstrap.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'graph/css/bootstrap-theme.css' %}"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'graph/css/bootstrap-chosen.css' %}"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'graph/css/c3.min.css' %}"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'graph/css/graph.css' %}"/>
 
-{% block center_details %}
-	{{ block.super }}
+	<style type="text/css" media="all">
+    	.chosen-container.chosen-container-single {
+    		width: 300px !important; /* or any value that fits your needs */
+		}
+  	</style>
 
-	<div class="one_column_content">
-		<h1>Annotations for {{ userFullName }}</h1>
-		{% if annotations %}
-			<p>You have a total of {{ num_annotations }} annotations.<p>
-			<p>There are {{ num_xls }} Excel files, {{ num_csv }} CSV files and {{ num_txt }} TXT files</p>
-			<p>Select an annotation from the list and state which row holds the column names.
-				Leave 'Header' blank if there are no column names.</p>
-			<span id="test"></span>
-			<form class="standard_form settings_form" action="{% url 'preview' %}" method="POST" id="preview_form">{% csrf_token %}
-				{{ prev_form.annotation.errors }}
-				{% for field in prev_form %}
-					{% ifequal field.label_tag prev_form.preview_sheet.label_tag %}
-						<p id="preview_sheet">{{ field.label_tag }}
-						   {{ field }}</p>
-					{% else %}
-						<p>{{ field.label_tag }}
-						   {{ field }}</p>
-					{% endifequal %}
-				{% endfor %}
-				<input value="Preview" type="submit" />
-			</form>
-			<div id="preview_data"></div>
-			<form class="standard_form settings_form" action="{% url 'find' %}" method="POST" id="annotation_form">{% csrf_token %}
-				{{ form.annotation.errors }}
-				{% for field in form %}
-					{% ifequal field.label_tag form.sheet.label_tag %}
-						<p id="sheet">{{ field.label_tag }}
-						   {{ field }}</p>
-					{% else %}
-						<p>{{ field.label_tag }}
-						   {{ field }}</p>
-					{% endifequal %}
-				{% endfor %}
-				<input value="Get Columns" type="submit" />
-			</form>
-			<div id="graph_setup_dialog" class="graph-dialog" title="Graph settings">
-				<div id="django_message"></div>
-				<form action="" method="POST" id="plotform">{% csrf_token %}
-					{{ graph_form.as_p}}
-				</form>
-			</div>
-		{% else %}
-		    <p>No annotations.</p>
-		{% endif %}
+	{% include "webgateway/base/includes/script_src_jquery.html" %}
+    {% include "webgateway/base/includes/jquery-ui.html" %}
+</head>
 
+<body>
+	<!-- help dialog -->
+	<div class="modal fade" id="help_modal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel">
+		<div class="modal-dialog">
+		    <div class="modal-content">
+			    <div class="modal-header">
+		    	    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        	<h4 class="modal-title" id="helpModalLabel">Usage</h4>
+		    	</div>
+		    	<div class="modal-body">
+		        	<p>
+						<h4><p><ul>
+							<li>This app retrieves all CSV, Excel or TXT files that you have stored in OMERO (you must be logged in) and allows you to make graphs from the data contained therein. You can export the graph back to OMERO (as PNG --> look in 'Orphaned images').</li>
+							<li>The graph is plotted using <a href="https://plot.ly">Plot.ly</a>. If you click 'Edit chart' on the bottom right of the chart area you will be taken to the Plot.ly website where you will be able to further edit the graph, save and even share the chart with your colleagues.</li>
+							<li>Select an annotation from the list and state which row holds the column names using 'Header'.</li>
+							<li>If the annotation is an Excel file you will also get to choose which sheet contains the data to be plotted.</li>
+							<li>Set 'Header' to 0 (zero) if there are no column names.</li>
+							<li>You can get a preview of what the data (stored in the annotation) looks like by choosing the annotion from the list and pressing 'Preview'. This can help you decide which columns to plot and which row holds the column names (if any).</li>
+						</ul></p></h4>
+		        	</p>
+		    	</div>
+		    	<div class="modal-footer">
+		        	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		    	</div>
+		    </div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+
+	<!-- annotations list dialog -->
+	<div class="modal fade" id="annolist_modal" tabindex="-1" role="dialog" aria-labelledby="annolistModalLabel">
+		<div class="modal-dialog">
+		    <div class="modal-content">
+			    <div class="modal-header">
+		    	    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        	<h4 class="modal-title" id="annolistModalLabel">All annotions for {{ userFullName }}</h4>
+		    	</div>
+		    	<div class="modal-body">
+		        	{% for annotation in annotations %}
+		        		<p> {{ annotation.getFile.getName }} </p>
+		        	{% endfor %}
+		    	</div>
+		    	<div class="modal-footer">
+		        	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		    	</div>
+		    </div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+
+	<!-- Preview data model -->
+	<div class="modal fade" id="preview_modal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title" id="previewModalLabel">Preview</h4>
+	     </div>
+	     <div class="modal-body">
+	     	<div id='prev_text'>
+	     		<table class="table table-bordered" id="prev_table">
+	    		<!-- content provided by backbone -->
+	    		</table>
+	    	</div>
+	     </div>
+	     <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	     </div>
+	    </div>
+	  </div>
 	</div>
-	<div class="graph-container" id="graph_container">
-		<div id="graph_placeholder" class="graph-placeholder"></div>
-		<div id="graph_toolbar" class="graph-toolbar">
-			<div class="tooltip-container">
-				<p><label><input id="enableTooltip" type="checkbox" checked="checked"></input>Enable tooltip</label></p>
+
+	<!-- graph settings dialog -->
+	<div class="modal fade" id="graph_setup_modal" tabindex="-1" role="dialog" aria-labelledby="graphModalLabel">
+		<div class="modal-dialog">
+		    <div class="modal-content">
+			    <div class="modal-header">
+		    	    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        	<h4 class="modal-title" id="graphModalLabel">Graph settings</h4>
+		    	</div>
+		    	<div class="modal-body">
+		        	<div class="form-horizontal">
+						<form action="" method="POST" id="plotform">{% csrf_token %}
+							{% for field in graph_form %}
+								<div class="form-group">
+									<label class="col-sm-2 control-label">{{ field.label }}</label>
+			                    	<div class="col-sm-10 controls">{{ field }}</div>
+								</div>
+							{% endfor %}
+						</form>
+		        	</div>
+		    	</div>
+		    	<div class="modal-footer">
+		        	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		        	<button type="button" class="btn btn-primary" id="plotgraph">Plot graph</button>
+		    	</div>
+		    </div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+
+	<nav class="navbar navbar-default">
+	  <div class="container-fluid">
+	    <!-- Brand and toggle get grouped for better mobile display -->
+	    <div class="navbar-header">
+	      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#omero-graph-collapse" aria-expanded="false">
+	        <span class="sr-only">Toggle navigation</span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	      </button>
+	      <a class="navbar-brand" href="#">OMERO.graph</a>
+	    </div>
+
+	    <!-- Collect the nav links, forms, and other content for toggling -->
+	    <div class="collapse navbar-collapse" id="omero-graph-collapse">
+	      <ul class="nav navbar-nav">
+	        <li class="dropdown">
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Options <span class="caret"></span></a>
+	          <ul class="dropdown-menu">
+	            <li><a href="#help_modal" data-toggle="modal">Usage</a></li>
+	            <li><a href="#annolist_modal" data-toggle="modal">List annotations</a></li>
+	          </ul>
+	        </li>
+	      </ul>
+	      <ul class="nav navbar-nav navbar-right">
+	        <li><a href="http://localhost:4080/webclient">Back to OMERO</a></li>
+	      </ul>
+	    </div><!-- /.navbar-collapse -->
+	  </div><!-- /.container-fluid -->
+	</nav>
+
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-xs-6 col-md-4">
+				{% if annotations %}
+					<div class="alert alert-info" id="alert-message">
+						{% if num_annotations == 1 %}
+							<p>You have {{ num_annotations }} annotation.<p>
+							{% if num_xls > 0 %}
+								<p>It is an Excel document. <p>
+							{% endif %}
+							{% if num_csv > 0 %}
+								<p>It is a CSV document. <p>
+							{% endif %}
+							{% if num_txt > 0 %}
+								<p>It is a TXT document. <p>
+							{% endif %}
+						{% else %}
+							<p>You have a total of {{ num_annotations }} annotations.<p>
+							<p>There are {{ num_xls }} Excel files, {{ num_csv }} CSV files and {{ num_txt }} TXT files</p>
+						{% endif %}
+					</div>
+					<span id="test"></span>
+					<ul class="nav nav-tabs">
+   						<li role="presentation" class="active"><a href="#annotation" role="tab" data-toggle="tab">Chart data</a></li>
+  						<li role="presentation"><a href="#graph_settings"role="tab" data-toggle="tab">Chart settings</a></li>
+  					</ul>
+  					<div class="tab-content">
+						<div role="tabpanel" class="tab-pane active" id="annotation">
+							<p><form action="{% url 'preview' %}" method="POST" id="preview_form">{% csrf_token %}
+						        {% for field in prev_form %}
+						            {% if field.errors %}
+						                <div class="form-group has-error">
+						                    <label class="control-label">{{ field.label }}</label> 
+						                    <div class="controls">{{ field }}
+						                        <span class="help-inline">
+						                            {% for error in  field.errors %}{{ error }}{% endfor %}
+						                        </span>
+						                    </div>
+						                </div>
+						            {% else %}
+						                <div class="form-group">
+						                	{% ifequal field.label_tag prev_form.preview_sheet.label_tag %}
+						                		<div class="sheet">
+													<label class="control-label">{{ field.label }}</label> 
+							                    	<div class="controls">{{ field }}</div>
+						                    	</div>
+											{% else %}
+												<label class="control-label">{{ field.label }}</label>
+						                    	<div class="controls">{{ field }}</div>
+											{% endifequal %}
+						                </div>
+						            {% endif %}
+						        {% endfor %}
+								<div class="form-actions">
+		        					<button type="submit" class="btn btn-primary" >Preview</button>
+		    					</div>
+							</form></p>
+							<p><form action="{% url 'find' %}" method="POST" id="annotation_form">{% csrf_token %}
+						        {% for field in form %}
+						            {% if field.errors %}
+						                <div class="form-group has-error">
+						                    <label class="control-label">{{ field.label }}</label> 
+						                    <div class="controls">{{ field }}
+						                        <span class="help-inline">
+						                            {% for error in  field.errors %}{{ error }}{% endfor %}
+						                        </span>
+						                    </div>
+						                </div>
+						            {% else %}
+						                <div class="form-group">
+						                	{% ifequal field.label_tag form.sheet.label_tag %}
+						                		<div class="sheet">
+													<label class="control-label">{{ field.label }}</label> 
+							                    	<div class="controls">{{ field }}</div>
+						                    	</div>
+											{% else %}
+												<label class="control-label">{{ field.label }}</label>
+						                    	<div class="controls">{{ field }}</div>
+											{% endifequal %}
+						                </div>
+						            {% endif %}
+						        {% endfor %}
+								<div class="form-actions">
+		        					<button type="submit" class="btn btn-primary" >Get data from OMERO</button>
+		    					</div>
+							</form></p>
+						</div>
+  						<div role="tabpanel" class="tab-pane" id="graph_settings">
+  							<p></p>
+							<form class="form-horizontal">
+							  <div class="form-group">
+							    <label for="inputTitle" class="col-sm-2 control-label">Title:</label>
+							    <div class="col-sm-10">
+							      <input type="text" class="form-control" id="inputTitle" placeholder="chart title">
+							    </div>
+							  </div>
+							  <div class="form-group">
+							    <label for="inputXlabel" class="col-sm-2 control-label">xLabel:</label>
+							    <div class="col-sm-10">
+							      <input type="text" class="form-control" id="inputXlabel" placeholder="x axis label">
+							    </div>
+							  </div>
+							  <div class="form-group">
+							    <label for="inputYlabel" class="col-sm-2 control-label">yLabel:</label>
+							    <div class="col-sm-10">
+							      <input type="text" class="form-control" id="inputYlabel" placeholder="y axis label">
+							    </div>
+							  </div>
+							  <div class="form-group">
+							    <div class="col-sm-offset-2 col-sm-10">
+							      <button id="updateButton" type="submit" class="btn btn-primary">Update</button>
+							    </div>
+							  </div>
+							</form>
+						</div>
+					</div>
+				{% else %}
+				    <p>No annotations.</p>
+				{% endif %}
 			</div>
-            <a class="btn btn_text silver" id="graph_save">
-                <span>Export to OMERO</span>
-            </a>
-            <a class="btn btn_text silver" id="graph_edit">
-                <span>Edit</span>
-            </a>
+			<div class="col-xs-12 col-md-8">
+				<div class="graph-container" id="graph_container">
+					<div class="export">
+			        	<button class="btn btn-primary btn-sm" id="graph_save">Export to OMERO</button>
+			        </div>
+				</div>
+			</div>
 		</div>
-	</div>
-	<div id="graph_edit_dialog" class="graph-dialog" title="Graph settings">
-		<p><label for="graph_title">Title</label>
-		   <input type='text' id="graph_title" /></p>
-		<p><label for="graph_xLabel">X Label</label>
-		   <input type='text' id="graph_xLabel"/></p>
-		<p><label for="graph_yLabel">Y Label</label>
-		   <input type='text' id="graph_yLabel"/></p>
-	</div>
-	
-{% endblock %}
-
-{% block body %}
-	{{ block.super }}
-	
-	<script src="{% static 'graph/js/jquery.flot.js' %}"></script>
-	<script src="{% static 'graph/js/jquery.flot.axislabels.js' %}"></script>
+	</div>	
+	<script src="{% static 'graph/js/bootstrap.js' %}"></script>
 	<script src="{% static 'graph/js/underscore.js' %}"></script>
 	<script src="{% static 'graph/js/backbone.js' %}"></script>
-	<script src="{% static 'graph/js/html2canvas.js' %}"></script>
 	<script type="text/javascript" src="{% static '3rdparty/jquery.chosen-1.2.0/chosen.jquery.js' %}"></script>
+	<script src="{% static 'graph/js/d3.min.js' %}"></script>
+	<script src="{% static 'graph/js/plotly.min.js' %}"></script>
 	<script src="{% static 'graph/js/models.js' %}"></script>
 	<script src="{% static 'graph/js/views.js' %}"></script>
 	<script src="{% static 'graph/js/application.js' %}"></script>
 	
 	<script type="text/javascript">
 		$(document).ready(function() {
-
-			// keep-alive ping every minute, so that OMERO session doesn't die
-	        setInterval(function (){
+			setInterval(function (){
 	            $.get("{% url 'keepalive_ping' %}");
 	        }, 60000);
 
+	        window.setTimeout(function() {
+    			$("#alert-message").fadeTo(500, 0).slideUp(500, function(){
+        		$(this).remove(); 
+    			});
+			}, 5000);
+
 			$("#id_preview_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to preview'});
 			$("#id_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to plot'});
-			$("#id_x").chosen({disable_search_threshold: 10,placeholder_text:'Choose data for x axis',width: "300px"});
-			$("#id_y").chosen({disable_search_threshold: 10,placeholder_text:'Choose columns to plot',width: "300px"});
+			$("#id_x_data").chosen({disable_search_threshold: 10,placeholder_text:'Choose data for x axis',width: "100px"});
+			$("#id_y_data").chosen({disable_search_threshold: 10,placeholder_text:'Choose columns to plot',width: "300px"});
+			$("#id_plot_type").chosen({disable_search_threshold: 10,placeholder_text:'Choose type of graph',width: "100px"});
 			$("#preview_sheet").hide();
-			$("#sheet").hide();
+			$(".sheet").hide();
 			$("#graph_setup").hide();
-			$(".graph-container").hide();
-			$("#graph_toolbar").hide();
+			//$(".graph-container").hide();
+			$("#graph_toolbar").show();
 			
 			if ($('#id_annotation').val().indexOf('xls')>0) {
 						$("#preview_sheet").show();
@@ -134,5 +336,5 @@
 			});
 		});
 	</script>
-			
-{% endblock %}
+</body>
+</html>
