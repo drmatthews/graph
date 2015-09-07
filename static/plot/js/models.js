@@ -1,6 +1,6 @@
 
 	var AnnotationModel = Backbone.Model.extend({
-		url: "/graph/find"
+		url: "/plot/find"
 	});
 
 	var PlotlyModel = Backbone.Model.extend({

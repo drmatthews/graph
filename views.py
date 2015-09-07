@@ -357,7 +357,7 @@ def index(request, conn=None, **kwargs):
                    'num_csv': num_csv, 'num_txt': num_txt,
                    'form': ann_form, 'graph_form': graph_form,\
                    'prev_form':preview_form}
-        return render(request, "graph/indexbs.html", context)
+        return render(request, "plot/index.html", context)
         
 @login_required()
 def plot(request, conn=None, **kwargs):

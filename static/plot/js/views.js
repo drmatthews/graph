@@ -152,7 +152,7 @@ var graphSetupModalView = Backbone.View.extend({
 		$.ajax({
 			traditional: true,
 			type: "POST",
-			url: "/graph/plot/",
+			url: "/plot/plot/",
 			data : {'x_data' : x, 'y_data': y, 'title': title, 'x_Label': xLabel, 'y_Label': yLabel, 'plot_type': plot_type },
 			success: function(plotresults) {
 				
@@ -265,7 +265,7 @@ var omeroExportView = Backbone.View.extend({
 		$.ajax({
 			traditional: true,
 			type: "POST",
-			url: "/graph/save",
+			url: "/plot/save",
 			data : {'graph_data' : data, 'graph_layout': layout},
 			success: function(saveresults) {
 				alert(saveresults.message);
