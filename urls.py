@@ -1,5 +1,5 @@
 from django.conf.urls import *
-from graph import views
+from plot import views
 
 urlpatterns = patterns('django.views.generic.simple',
 
