@@ -12,9 +12,8 @@
 			currentXlabel: 'x axis label',
 			currentYlabel: 'y axis label',
 			title: 'chart title',
-			graph_type: 'scatter+line',
+			plot_mode: 'lines+markers',
 			type: 'scatter',
-			mode: 'lines+markers',
 			layout: {
 				title: 'chart title',
 				autosize: false,
@@ -40,7 +39,7 @@
 				type = this.get('type'),
 				data = [],
 				num_traces = this.get('num_traces'),
-				mode = this.get('mode'),
+				mode = this.get('plot_mode'),
 				layout = this.get('layout');
 
 			for (t = 0; t < num_traces; t++){
@@ -84,51 +83,24 @@
 				ydata = this.get('y'),
 				xmin = Math.min.apply(Math,xdata),
 				xmax = Math.max.apply(Math,xdata),
-				graph_type = this.get('graph_type'),
+				plot_mode = this.get('plot_mode'),
+				plot_type = this.get('type'),
 				num_traces = this.get('num_traces');
-
 			for (t = 0; t < num_traces; t++){
 				Plotly.deleteTraces(graphDiv, t);
 			}
 
-			if (graph_type != 'bar'){
-				if (graph_type == 'line'){
-					var ymin = [],
-						ymax = [],
-						mode = 'lines';
-					for (t = 0; t < ydata.length; t++){
-						Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t], 'type': 'scatter',
-													'mode': mode});
-						ymin.push(Math.min.apply(Math,ydata[t]));
-						ymax.push(Math.max.apply(Math,ydata[t]));
-					}
-				}	
-
-				else if (graph_type == 'scatter'){
-					var ymin = [],
-						ymax = [],
-						mode = 'markers';
-					for (t = 0; t < ydata.length; t++){
-						Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t], 'mode': mode,
-													'type': 'scatter'});
-						ymin.push(Math.min.apply(Math,ydata[t]));
-						ymax.push(Math.max.apply(Math,ydata[t]));
-					}					
-				}
-
-				else if (graph_type == 'scatter+line'){
-					var ymin = [],
-						ymax = [],
-						mode = 'lines+markers';
-					for (t = 0; t < ydata.length; t++){
-						Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t], 'mode': mode,
-													'type': 'scatter'});
-						ymin.push(Math.min.apply(Math,ydata[t]));
-						ymax.push(Math.max.apply(Math,ydata[t]));
-					}					
+			if (plot_type != 'bar'){
+				var ymin = [],
+					ymax = [];
+				for (t = 0; t < ydata.length; t++){
+					Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t], 'type': 'scatter',
+												'mode': plot_mode});
+					ymin.push(Math.min.apply(Math,ydata[t]));
+					ymax.push(Math.max.apply(Math,ydata[t]));
 				}
 			}
-			this.set({mode: mode});
+			this.set({plot_mode: plot_mode});
 			this.set({num_traces: ydata.length});
 
 			var title = this.get('title'),

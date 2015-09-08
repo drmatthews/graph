@@ -147,13 +147,13 @@ var graphSetupModalView = Backbone.View.extend({
 			title = $('#id_title').val(),
 			xLabel = $('#id_x_Label').val(),
 			yLabel = $('#id_y_Label').val(),
-			plot_type = $('#id_plot_type').val();
+			plot_mode = $('#id_plot_mode').val();
 			annId = "{{ request.session.annotation_id }}";
 		$.ajax({
 			traditional: true,
 			type: "POST",
 			url: "/plot/plot/",
-			data : {'x_data' : x, 'y_data': y, 'title': title, 'x_Label': xLabel, 'y_Label': yLabel, 'plot_type': plot_type },
+			data : {'x_data' : x, 'y_data': y, 'title': title, 'x_Label': xLabel, 'y_Label': yLabel, 'plot_mode': plot_mode },
 			success: function(plotresults) {
 				
 				var xdata = plotresults.xdata,//generateData(plotresults.graph_data),
@@ -167,7 +167,7 @@ var graphSetupModalView = Backbone.View.extend({
 					xLabel = plotresults.xLabel,
 					yLabel = plotresults.yLabel;
 				model.set({'title': title, 'x': xdata, 'y': ydata, 'currentXlabel': xLabel, 
-							'currentYlabel': yLabel, 'type': plot_type});
+							'currentYlabel': yLabel, 'plot_mode': plot_mode});
 				model.update();
 				$('#inputTitle').val(title);
 				$('#inputXlabel').val(xLabel);
@@ -243,12 +243,12 @@ var omeroExportView = Backbone.View.extend({
 		var model = this.model,
 			xdata = model.get('x'),
 			ydata = model.get('y'),
-			graph_type = model.get('graph_type'),
+			plot_mode = model.get('plot_mode'),
 			title = model.get('title'),
 			xLabel = model.get('currentXlabel'),
 			yLabel = model.get('currentYlabel'),
 			num_traces = model.get('num_traces');
-			console.log(graph_type)
+			console.log(plot_mode)
 		data = [];
 		for (t = 0; t < num_traces; t++){
 			data.push({ 
@@ -256,7 +256,7 @@ var omeroExportView = Backbone.View.extend({
 				ydata: ydata[t]
 			})
 		};
-		var layout = {'graph_type': graph_type, 'title': title, 'xLabel': xLabel, 'yLabel': yLabel,
+		var layout = {'plot_mode': plot_mode, 'title': title, 'xLabel': xLabel, 'yLabel': yLabel,
 					   'xmin': xmin, 'xmax': xmax, 'ymin': ymin, 'ymax': ymax };
 		this.save(JSON.stringify(data),JSON.stringify(layout));
 	},

@@ -18,9 +18,9 @@ class AnnotationsForm(forms.Form):
     header = IntegerField(required=False,min_value=0)
     sheet = IntegerField(required=False,min_value=0)
     
-class GraphForm(forms.Form):
+class PlotForm(forms.Form):
     def __init__(self, options=None, *args, **kwargs):
-        super(GraphForm, self).__init__(*args, **kwargs)
+        super(PlotForm, self).__init__(*args, **kwargs)
         self.fields['x_data'].choices = options
         self.fields['y_data'].choices = options
 
@@ -28,10 +28,10 @@ class GraphForm(forms.Form):
     x_Label = CharField(max_length=50,required=False)
     y_Label = CharField(max_length=50,required=False)
     #tick_size = IntegerField(required=False,min_value=1)
-    plot_type = ChoiceField(choices=(('',''),('bar','bar'),
-                                            ('line','line'),\
-                                            ('scatter','scatter'),\
-                                            ('scatter+line','scatter+line')),\
+    plot_mode = ChoiceField(choices=(('',''),('bar','bar'),
+                                            ('lines','lines'),\
+                                            ('markers','markers'),\
+                                            ('lines+markers','lines+markers')),\
                                             required=True)
     x_data = ChoiceField(choices=(),required=True)
     y_data = MultipleChoiceField(choices=(),required=True)

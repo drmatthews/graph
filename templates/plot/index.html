@@ -102,7 +102,7 @@
 		    	<div class="modal-body">
 		        	<div class="form-horizontal">
 						<form action="" method="POST" id="plotform">{% csrf_token %}
-							{% for field in graph_form %}
+							{% for field in plot_form %}
 								<div class="form-group">
 									<label class="col-sm-2 control-label">{{ field.label }}</label>
 			                    	<div class="col-sm-10 controls">{{ field }}</div>
@@ -305,7 +305,7 @@
 			$("#id_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to plot'});
 			$("#id_x_data").chosen({disable_search_threshold: 10,placeholder_text:'Choose data for x axis',width: "100px"});
 			$("#id_y_data").chosen({disable_search_threshold: 10,placeholder_text:'Choose columns to plot',width: "300px"});
-			$("#id_plot_type").chosen({disable_search_threshold: 10,placeholder_text:'Choose type of graph',width: "100px"});
+			$("#id_plot_mode").chosen({disable_search_threshold: 10,placeholder_text:'Choose type of graph',width: "100px"});
 			$("#preview_sheet").hide();
 			$(".sheet").hide();
 			$("#graph_setup").hide();

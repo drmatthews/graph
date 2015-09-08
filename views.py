@@ -1,6 +1,6 @@
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
-from forms import PreviewForm,AnnotationsForm,GraphForm
+from forms import PreviewForm,AnnotationsForm,PlotForm
 
 import os
 import re
@@ -29,12 +29,12 @@ def plotly_graph(gdata, glayout):
 
     """
     data = [ { xdata: [], ydata: [] }, trace1: {xdata: [], ydata: []} ]
-    layout = {graph_type: '', title: '', xLabel: '', yLabel: '', 
+    layout = {plot_mode: '', title: '', xLabel: '', yLabel: '', 
               xmin: '', xmax: '', ymin: '', ymax: ''}
     """
 
     traces = []
-    graph_type = glayout['graph_type']
+    plot_mode = glayout['plot_mode']
     xmin = float(glayout['xmin'].replace(u'\u2212','-'))
     xmax = float(glayout['xmax'].replace(u'\u2212','-'))
     ymin = float(glayout['ymin'].replace(u'\u2212','-'))
@@ -46,21 +46,21 @@ def plotly_graph(gdata, glayout):
     print yaxis_range
 
     for trace in gdata:
-        if 'bar' in graph_type:
+        if 'bar' in plot_mode:
             traces.append(Bar(
                 x=[int(xd) for xd in trace['xdata']],
                 y=[int(yd) for yd in trace['ydata']]))
-        elif 'line' in graph_type:
+        elif plot_mode == 'lines':
             traces.append(Scatter(
                 x=[int(xd) for xd in trace['xdata']],
                 y=[int(yd) for yd in trace['ydata']],
                 mode='lines'))
-        elif 'scatter' in graph_type:
+        elif plot_mode == 'markers':
             traces.append(Scatter(
                 x=[int(xd) for xd in trace['xdata']],
                 y=[int(yd) for yd in trace['ydata']],
                 mode='markers'))   
-        elif 'scatter+line' in graph_type:
+        elif plot_mode == 'lines+markers':
             traces.append(Scatter(
                 x=[int(xd) for xd in trace['xdata']],
                 y=[int(yd) for yd in trace['ydata']],
@@ -88,12 +88,12 @@ def plotly_graph(gdata, glayout):
     print traces
     graph_data = Data(traces)
     fname = glayout['title'] + ".png"
-    output_dir = tempfile.mkdtemp(prefix='exported_graphs')
+    output_dir = tempfile.mkdtemp(prefix='exported_plots')
     path = os.path.join(output_dir,fname)
     py.image.save_as({'data': graph_data, 'layout': graph_layout}, path)
     return output_dir,path
 
-def upload_graph(conn, path):
+def upload_plot(conn, path):
     """
     This creates a new Image in OMERO using all the images in destination folder as Z-planes
     """
@@ -349,13 +349,13 @@ def index(request, conn=None, **kwargs):
         num_xls = len([name for name in names if '.xls' in name])
         num_txt = len([name for name in names if '.txt' in name])
         num_csv = len([name for name in names if '.csv' in name])
-        graph_form = GraphForm(options=(('x_data','x_data'),('y_data','y_data')))
+        plot_form = PlotForm(options=(('x_data','x_data'),('y_data','y_data')))
         
         context = {'userFullName': userFullName,
                    'annotations': anns,'num_annotations': len(anns),
                    'annotation_names': names, 'num_xls': num_xls,
                    'num_csv': num_csv, 'num_txt': num_txt,
-                   'form': ann_form, 'graph_form': graph_form,\
+                   'form': ann_form, 'plot_form': plot_form,\
                    'prev_form':preview_form}
         return render(request, "plot/index.html", context)
         
@@ -369,7 +369,7 @@ def plot(request, conn=None, **kwargs):
     fname, fextension = os.path.splitext(fpath)
     cols,message,csv_path = parse_annotation(fpath,fextension,header_row,sheet)
     if request.POST:
-        form = GraphForm(options=cols,data=request.POST.copy())
+        form = PlotForm(options=cols,data=request.POST.copy())
         if form.is_valid():
             title = annotation.getFile().getName()
             if form.cleaned_data['title']:
@@ -383,7 +383,7 @@ def plot(request, conn=None, **kwargs):
             if form.cleaned_data['y_Label']:
                 yLabel = form.cleaned_data['y_Label']
             #tick_size = form.cleaned_data['tick_size']
-            plot_type = form.cleaned_data['plot_type']
+            plot_mode = form.cleaned_data['plot_mode']
             xdata = [floor(xd) for xd in get_column(fpath,fextension,x,header_row,sheet)]
             xmin = min(xdata)
             xmax = max(xdata)
@@ -394,7 +394,7 @@ def plot(request, conn=None, **kwargs):
                   'title': title, 'x' : x, 'y' : y,\
                   'xLabel': xLabel, 'yLabel': yLabel,\
                   'xdata': xdata, 'ydata': ydata,\
-                  'num_series': len(ydata),'graph_type':plot_type,\
+                  'num_series': len(ydata),'plot_mode':plot_mode,\
                   'xmin': xmin, 'xmax': xmax,'csv_path': csv_path}
             data = json.dumps(rv)
             return HttpResponse(data, mimetype='application/json')
@@ -436,7 +436,7 @@ def save(request, conn=None, **kwargs):
         layout = request.POST['graph_layout']
         output_dir,path = plotly_graph(json.loads(data),json.loads(layout))
         # and upload to omero
-        img = upload_graph(conn,path)
+        img = upload_plot(conn,path)
         if img:
             shutil.rmtree(output_dir)
             rv = {'message':"Sucessfully saved"}
