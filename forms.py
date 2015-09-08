@@ -18,9 +18,9 @@ class AnnotationsForm(forms.Form):
     header = IntegerField(required=False,min_value=0)
     sheet = IntegerField(required=False,min_value=0)
     
-class GraphForm(forms.Form):
+class PlotForm(forms.Form):
     def __init__(self, options=None, *args, **kwargs):
-        super(GraphForm, self).__init__(*args, **kwargs)
+        super(PlotForm, self).__init__(*args, **kwargs)
         self.fields['x'].choices = options
         self.fields['y'].choices = options
 

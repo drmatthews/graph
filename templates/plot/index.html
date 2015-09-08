@@ -1,4 +1,4 @@
-{% extends "graph/base.html" %}
+{% extends "plot/base.html" %}
 {% load i18n %}
 
 {% block link %}
@@ -129,7 +129,7 @@
 			$.ajax({
 				traditional: true,
 				type: "POST",
-				url: "/graph/plot/",
+				url: "/plot/plot/",
 				data : {'x' : x, 'y': y},
 				success: function(plotresults) {
 					console.log(plotresults)
@@ -234,7 +234,7 @@
 								$.ajax({
 									traditional: true,
 									type: "POST",
-									url: "/graph/save",
+									url: "/plot/save",
 									data : {'img' : img },
 									success: function(saveresults) {
 										console.log(saveresults)
@@ -261,7 +261,7 @@
 {% endblock%}
 
 {% block title %}
-    Graphs
+    OMERO.plot
 {% endblock %}
 
 {% block center_details %}
@@ -309,7 +309,7 @@
 	<div id="setup_container">
 		<div id="django_message"></div>
 		<form class="standard_form settings_form" action="" method="POST" id="plotform">{% csrf_token %}
-		    {{graph_form.as_p}}
+		    {{plot_form.as_p}}
 		    <input value="Plot" type="submit" />
 		</form>
 	</div>

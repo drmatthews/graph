@@ -1,6 +1,6 @@
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
-from forms import PreviewForm,AnnotationsForm,GraphForm
+from forms import PreviewForm,AnnotationsForm,PlotForm
 
 import os
 import re
@@ -19,10 +19,10 @@ import shutil
 import omero
 from omeroweb.webclient.decorators import login_required
 
-ANNPATH = '/Users/uqdmatt2/Desktop/temp'
+ANNPATH = '/home/omero/temp'
 #ANNPATH = tempfile.mkdtemp(prefix='downloaded_annotations')
 
-def upload_graph(conn, path):
+def upload_plot(conn, path):
     """
     This creates a new Image in OMERO using all the images in destination folder as Z-planes
     """
@@ -255,15 +255,15 @@ def index(request, conn=None, **kwargs):
         num_xls = len([name for name in names if '.xls' in name])
         num_txt = len([name for name in names if '.txt' in name])
         num_csv = len([name for name in names if '.csv' in name])
-        graph_form = GraphForm(options=(('x','x'),('y','y')))
+        plot_form = PlotForm(options=(('x','x'),('y','y')))
         
         context = {'userFullName': userFullName,
                    'annotations': anns,'num_annotations': len(anns),
                    'annotation_names': names, 'num_xls': num_xls,
                    'num_csv': num_csv, 'num_txt': num_txt,
-                   'form': ann_form, 'graph_form': graph_form,\
+                   'form': ann_form, 'plot_form': plot_form,\
                    'prev_form':preview_form}
-        return render(request, "graph/index.html", context)
+        return render(request, "plot/index.html", context)
         
 @login_required()
 def plot(request, conn=None, **kwargs):
@@ -275,7 +275,7 @@ def plot(request, conn=None, **kwargs):
     fname, fextension = os.path.splitext(fpath)
     cols,message = parse_annotation(fpath,fextension,header_row,sheet)
     if request.POST:
-        form = GraphForm(options=cols,data=request.POST.copy())
+        form = PlotForm(options=cols,data=request.POST.copy())
         if form.is_valid():
             title = annotation.getFile().getName()
             x = form.cleaned_data['x']
@@ -333,7 +333,7 @@ def save(request, conn=None, **kwargs):
         output.write(imgstr.decode('base64'))
         output.close()
         # and upload to omero
-        img = upload_graph(conn,path)
+        img = upload_plot(conn,path)
         if img:
             shutil.rmtree(output_dir)
             rv = {'message':"Sucessfully saved"}
