@@ -92,7 +92,7 @@
 	</div>
 
 	<!-- graph settings dialog -->
-	<div class="modal fade" id="graph_setup_modal" tabindex="-1" role="dialog" aria-labelledby="graphModalLabel">
+	<div class="modal fade" id="plot_setup_modal" tabindex="-1" role="dialog" aria-labelledby="graphModalLabel">
 		<div class="modal-dialog">
 		    <div class="modal-content">
 			    <div class="modal-header">
@@ -236,33 +236,54 @@
 		        					<button type="submit" class="btn btn-primary" >Get data from OMERO</button>
 		    					</div>
 							</form></p>
+							<form class="form-horizontal" id="plot_data_update">
+								<div class="form-group">
+									<div class="col-sm-10">
+										<select id="id_x_data_update">
+											<option value=""></option>
+										</select>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="col-sm-10">
+										<select id="id_y_data_update" name="y_data_update" multiple="multiple">
+											<option value=""></option>
+										</select>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="col-sm-10">
+	        							<button class="btn btn-primary" id="update_plot_data">Update</button>
+	        						</div>
+	        					</div>
+							</form>
 						</div>
-  						<div role="tabpanel" class="tab-pane" id="graph_settings">
+  						<div role="tabpanel" class="tab-pane" id="plot_settings">
   							<p></p>
 							<form class="form-horizontal">
-							  <div class="form-group">
-							    <label for="inputTitle" class="col-sm-2 control-label">Title:</label>
-							    <div class="col-sm-10">
-							      <input type="text" class="form-control" id="inputTitle" placeholder="chart title">
-							    </div>
-							  </div>
-							  <div class="form-group">
-							    <label for="inputXlabel" class="col-sm-2 control-label">xLabel:</label>
-							    <div class="col-sm-10">
-							      <input type="text" class="form-control" id="inputXlabel" placeholder="x axis label">
-							    </div>
-							  </div>
-							  <div class="form-group">
-							    <label for="inputYlabel" class="col-sm-2 control-label">yLabel:</label>
-							    <div class="col-sm-10">
-							      <input type="text" class="form-control" id="inputYlabel" placeholder="y axis label">
-							    </div>
-							  </div>
-							  <div class="form-group">
-							    <div class="col-sm-offset-2 col-sm-10">
-							      <button id="updateButton" type="submit" class="btn btn-primary">Update</button>
-							    </div>
-							  </div>
+								<div class="form-group">
+									<label for="inputTitle" class="col-sm-2 control-label">Title:</label>
+									<div class="col-sm-10">
+										<input type="text" class="form-control" id="inputTitle" placeholder="chart title">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputXlabel" class="col-sm-2 control-label">xLabel:</label>
+									<div class="col-sm-10">
+										<input type="text" class="form-control" id="inputXlabel" placeholder="x axis label">
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="inputYlabel" class="col-sm-2 control-label">yLabel:</label>
+									<div class="col-sm-10">
+										<input type="text" class="form-control" id="inputYlabel" placeholder="y axis label">
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="col-sm-offset-2 col-sm-10">
+										<button id="updateButton" type="submit" class="btn btn-primary">Update</button>
+									</div>
+								</div>
 							</form>
 						</div>
 					</div>
@@ -304,13 +325,13 @@
 			$("#id_preview_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to preview'});
 			$("#id_annotation").chosen({disable_search_threshold: 10,placeholder_text:'Choose annotation to plot'});
 			$("#id_x_data").chosen({disable_search_threshold: 10,placeholder_text:'Choose data for x axis',width: "100px"});
+			$("#id_x_data_update").chosen({disable_search_threshold: 10,placeholder_text:'Choose data for x axis',width: "100px"});
 			$("#id_y_data").chosen({disable_search_threshold: 10,placeholder_text:'Choose columns to plot',width: "300px"});
+			$("#id_y_data_update").chosen({disable_search_threshold: 1,placeholder_text:'Choose columns to plot',width: "300px"});
 			$("#id_plot_mode").chosen({disable_search_threshold: 10,placeholder_text:'Choose type of graph',width: "100px"});
 			$("#preview_sheet").hide();
 			$(".sheet").hide();
-			$("#graph_setup").hide();
-			//$(".graph-container").hide();
-			$("#graph_toolbar").show();
+			$("#plot_data_update").hide();
 			
 			if ($('#id_annotation').val().indexOf('xls')>0) {
 						$("#preview_sheet").show();

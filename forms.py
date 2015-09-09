@@ -35,3 +35,12 @@ class PlotForm(forms.Form):
                                             required=True)
     x_data = ChoiceField(choices=(),required=True)
     y_data = MultipleChoiceField(choices=(),required=True)
+
+class PlotUpdateForm(forms.Form):
+    def __init__(self, options=None, *args, **kwargs):
+        super(PlotForm, self).__init__(*args, **kwargs)
+        self.fields['x_update'].choices = options
+        self.fields['y_update'].choices = options
+
+    x_update = ChoiceField(choices=(),required=True)
+    y_update = MultipleChoiceField(choices=(),required=True)

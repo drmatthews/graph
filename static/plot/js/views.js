@@ -21,8 +21,8 @@ var AnnotationView = Backbone.View.extend({
     },
 
     initialize: function (options) {
-		this.graphModel = this.options.graphModel;
-		this.graphDialog = new graphSetupModalView({ model: this.graphModel });
+		this.plotModel = this.options.plotModel;
+		this.plotDialog = new plotSetupModalView({ model: this.plotModel });
     },
 
     submit: function (e) {
@@ -30,7 +30,7 @@ var AnnotationView = Backbone.View.extend({
 		var header = $('#id_header').val(),
 			sheet = $('#id_sheet').val(),
 			annotation = $('#id_annotation').val(),
-			graphDialog = this.graphDialog,
+			plotDialog = this.plotDialog,
 			model = this.model;
 		console.log(annotation,header,sheet)
 		$.ajax({
@@ -39,20 +39,30 @@ var AnnotationView = Backbone.View.extend({
 			url: this.$el.attr('action'),
 			data : {'annotation' : annotation, 'header': header, 'sheet': sheet},
 			success: function(results) {
-				var xoptions = $("#id_x_data");
-				var yoptions = $("#id_y_data");
-				var columns = results.columns;
+				var xoptions = $("#id_x_data"),
+					xoptions_update = $("#id_x_data_update"),
+					yoptions = $("#id_y_data"),
+					yoptions_update = $("#id_y_data_update"),					
+					columns = results.columns;
 				$("#id_x_data").empty();
+				$("#id_x_data_update").empty();
 				$("#id_y_data").empty();
+				$("#id_y_data_update").empty();
 				for (i = 0; i < columns.length; i++) {
 					xoptions.append($("<option />").val(columns[i][0]).text(columns[i][1]));
+					xoptions_update.append($("<option />").val(columns[i][0]).text(columns[i][1]));
 					yoptions.append($("<option />").val(columns[i][0]).text(columns[i][1]));
+					yoptions_update.append($("<option />").val(columns[i][0]).text(columns[i][1]));					
 				}
 				$("#id_x_data").trigger("chosen:updated");
 				$('#id_x_data').val('').trigger('liszt:updated');
+				$("#id_x_data_update").trigger("chosen:updated");
+				$('#id_x_data_update').val('').trigger('liszt:updated');
 				$("#id_y_data").trigger("chosen:updated");
 				$('#id_y_data').val('').trigger('liszt:updated');
-				graphDialog.show();
+				$("#id_y_data_update").trigger("chosen:updated");
+				$('#id_y_data_update').val('').trigger('liszt:updated');				
+				plotDialog.show();
 				model.save({'title': results.selected, 'xoptions': columns, 'yoptions': columns });
 		  },
           statusCode: {
@@ -131,8 +141,8 @@ var PreviewView = Backbone.View.extend({
 	}
 });
 
-var graphSetupModalView = Backbone.View.extend({
-	el: "#graph_setup_modal",
+var plotSetupModalView = Backbone.View.extend({
+	el: "#plot_setup_modal",
 	events: {
 		"click #plotgraph": "plotGraph"
 	},
@@ -149,6 +159,7 @@ var graphSetupModalView = Backbone.View.extend({
 			yLabel = $('#id_y_Label').val(),
 			plot_mode = $('#id_plot_mode').val();
 			annId = "{{ request.session.annotation_id }}";
+			console.log('y',y)
 		$.ajax({
 			traditional: true,
 			type: "POST",
@@ -172,6 +183,11 @@ var graphSetupModalView = Backbone.View.extend({
 				$('#inputTitle').val(title);
 				$('#inputXlabel').val(xLabel);
 				$('#inputYlabel').val(yLabel);
+				$('#id_x_data_update').val(x);
+				$("#id_x_data_update").trigger("chosen:updated");
+				$('#id_y_data_update').val(y);
+				$("#id_y_data_update").trigger("chosen:updated");
+				$("#plot_data_update").show();
 				el.modal('hide');
 		  },
 		  error: function(error) {
@@ -181,12 +197,12 @@ var graphSetupModalView = Backbone.View.extend({
     }
 });
 
-var graphSettingsEditView = Backbone.View.extend({
-	el: '#graph_settings',
+var plotSettingsEditView = Backbone.View.extend({
+	el: '#plot_settings',
 	events:{
-		'click #updateButton' : 'edit_graph',
+		'click #updateButton' : 'editPlot',
 	},
-	edit_graph: function(e){
+	editPlot: function(e){
 		e.preventDefault();
 		var title = $('#inputTitle').val(),
 			xLabel = $('#inputXlabel').val(),
@@ -198,6 +214,43 @@ var graphSettingsEditView = Backbone.View.extend({
 		$('#inputTitle').val('');
 		$('#inputXlabel').val('');
 		$('#inputYlabel').val('');
+	}
+});
+
+var plotDataUpdateView = Backbone.View.extend({
+	el: '#plot_data_update',
+	events:{
+		'click #update_plot_data' : 'updateData',
+	},
+	updateData: function(e){
+		e.preventDefault();
+		var model = this.model,
+			title = model.get('title'),
+			xLabel = model.get('currentXlabel'),
+			yLabel = model.get('currentYlabel'),
+			plot_mode = model.get('plot_mode'),
+			x_column = $('#id_x_data_update').val(),
+			y_column = $('#id_y_data_update').val();
+			console.log('y_column',y_column)
+
+		$.ajax({
+			traditional: true,
+			type: "POST",
+			url: "/plot/update",
+			data : {'x_column' : x_column, 'y_column': y_column},
+			success: function(new_data) {
+				var xdata = new_data.xdata,
+					ydata = new_data.ydata;
+				model.set({'title': title, 'x': xdata, 'y': ydata, 'currentXlabel': xLabel, 
+							'currentYlabel': yLabel, 'plot_mode': plot_mode});
+				model.update();
+		  },
+          statusCode: {
+              400: function() {
+                  alert(saveresults.message);
+			  }
+            }
+        });
 	}
 });
 
@@ -266,7 +319,7 @@ var omeroExportView = Backbone.View.extend({
 			traditional: true,
 			type: "POST",
 			url: "/plot/save",
-			data : {'graph_data' : data, 'graph_layout': layout},
+			data : {'plot_data' : data, 'plot_layout': layout},
 			success: function(saveresults) {
 				alert(saveresults.message);
 		  },

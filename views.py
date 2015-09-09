@@ -376,6 +376,7 @@ def plot(request, conn=None, **kwargs):
                 title = form.cleaned_data['title']
             x = form.cleaned_data['x_data']
             y = form.cleaned_data['y_data']
+            print 'first y',y
             xLabel = x
             if form.cleaned_data['x_Label']:
                 xLabel = form.cleaned_data['x_Label']
@@ -432,8 +433,8 @@ def preview(request, conn=None, **kwargs):
 @login_required()
 def save(request, conn=None, **kwargs):
     if request.POST:
-        data = request.POST['graph_data']
-        layout = request.POST['graph_layout']
+        data = request.POST['plot_data']
+        layout = request.POST['plot_layout']
         output_dir,path = plotly_graph(json.loads(data),json.loads(layout))
         # and upload to omero
         img = upload_plot(conn,path)
@@ -446,4 +447,22 @@ def save(request, conn=None, **kwargs):
             rv = {'message':"Exporting failed"}
             error = json.dumps(rv)
             return HttpResponseBadRequest(error, mimetype='application/json')
+
+@login_required()
+def update(request, conn=None, **kwargs):
+    if request.POST:
+        annotation_id = request.session['annotation_id']
+        annotation = conn.getObject("Annotation",annotation_id)
+        fpath = download_annotation(annotation)
+        header_row = request.session['header']
+        sheet = request.session['sheet']
+        fname, fextension = os.path.splitext(fpath)
+        x = request.POST['x_column']
+        y = [request.POST['y_column']]
+        xdata = [floor(xd) for xd in get_column(fpath,fextension,x,header_row,sheet)]
+        ydata = get_column(fpath,fextension,y,header_row,sheet)
+        rv = {'xdata': xdata, 'ydata': ydata,\
+              'num_series': len(ydata)}
+        data = json.dumps(rv)
+        return HttpResponse(data, mimetype='application/json')
         

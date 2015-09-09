@@ -8,4 +8,5 @@ urlpatterns = patterns('django.views.generic.simple',
     url(r'^preview', views.preview, name='preview'),
     url(r'^plot', views.plot, name='plot'),
     url(r'^save', views.save, name='save'),
+    url(r'^update', views.update, name='update'),
  )
