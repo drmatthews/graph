@@ -50,7 +50,7 @@
 				trace.mode = mode;
 				data.push(trace);
 			}
-			console.log(data)
+			
 			$(".graph-container").show();
 			Plotly.newPlot('graph_container', data, layout);
 		},
@@ -72,7 +72,7 @@
 				trace.mode = mode;
 				data.push(trace);
 			}
-			console.log(data)
+			
 			$(".graph-container").show();
 			Plotly.newPlot('graph_container', data, layout);
 		},

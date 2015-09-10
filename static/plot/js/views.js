@@ -54,6 +54,10 @@ var AnnotationView = Backbone.View.extend({
 					yoptions.append($("<option />").val(columns[i][0]).text(columns[i][1]));
 					yoptions_update.append($("<option />").val(columns[i][0]).text(columns[i][1]));					
 				}
+				$("#id_annotation").trigger("chosen:updated");
+				$('#id_annotation').val('').trigger('liszt:updated');
+				$("#id_preview_annotation").trigger("chosen:updated");
+				$('#id_preview_annotation').val('').trigger('liszt:updated');
 				$("#id_x_data").trigger("chosen:updated");
 				$('#id_x_data').val('').trigger('liszt:updated');
 				$("#id_x_data_update").trigger("chosen:updated");
@@ -254,8 +258,24 @@ var plotDataUpdateView = Backbone.View.extend({
 	}
 });
 
+var exportNotificationModalView = Backbone.View.extend({
+	el: "#export_notification_modal",
+	template:  _.template('<p><%- text %></p>'),
+	show: function(title) { 
+		$("#notification").append(this.template({text: title}));
+		this.$el.modal('show');
+	},
+	hide: function(){
+		this.$el.modal('hide');
+	}
+});
+
 var omeroExportView = Backbone.View.extend({
 	el: '#graph_container',
+
+	initialize: function(){
+		this.modal = new exportNotificationModalView();
+	},
 	
 	events: {
 		"click #graph_save": "omeroExport"
@@ -311,17 +331,19 @@ var omeroExportView = Backbone.View.extend({
 		};
 		var layout = {'plot_mode': plot_mode, 'title': title, 'xLabel': xLabel, 'yLabel': yLabel,
 					   'xmin': xmin, 'xmax': xmax, 'ymin': ymin, 'ymax': ymax };
+		this.modal.show(title);			   
 		this.save(JSON.stringify(data),JSON.stringify(layout));
 	},
 	
 	save: function(data, layout){
+		var modal = this.modal;
 		$.ajax({
 			traditional: true,
 			type: "POST",
 			url: "/plot/save",
 			data : {'plot_data' : data, 'plot_layout': layout},
 			success: function(saveresults) {
-				alert(saveresults.message);
+				modal.hide();
 		  },
           statusCode: {
               400: function() {

@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'plot/css/bootstrap-theme.css' %}"/>
 	<link rel="stylesheet" type="text/css" href="{% static 'plot/css/bootstrap-chosen.css' %}"/>
 	<link rel="stylesheet" type="text/css" href="{% static 'plot/css/c3.min.css' %}"/>
-	<link rel="stylesheet" type="text/css" href="{% static 'plot/css/graph.css' %}"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'plot/css/plot.css' %}"/>
 
 	<style type="text/css" media="all">
     	.chosen-container.chosen-container-single {
@@ -38,7 +38,7 @@
 							<li>Select an annotation from the list and state which row holds the column names using 'Header'.</li>
 							<li>If the annotation is an Excel file you will also get to choose which sheet contains the data to be plotted.</li>
 							<li>Set 'Header' to 0 (zero) if there are no column names.</li>
-							<li>You can get a preview of what the data (stored in the annotation) looks like by choosing the annotion from the list and pressing 'Preview'. This can help you decide which columns to plot and which row holds the column names (if any).</li>
+							<li>You can get a preview of what the data (stored in the annotation) looks like by choosing 'Preview data in annotation' from the 'Options' menu. This can help you decide which columns to plot and which row holds the column names (if any).</li>
 						</ul></p></h4>
 		        	</p>
 		    	</div>
@@ -78,6 +78,35 @@
 	        <h4 class="modal-title" id="previewModalLabel">Preview</h4>
 	     </div>
 	     <div class="modal-body">
+			<p><form action="{% url 'preview' %}" method="POST" id="preview_form">{% csrf_token %}
+				{% for field in prev_form %}
+					{% if field.errors %}
+						<div class="form-group has-error">
+							<label class="control-label">{{ field.label }}</label> 
+							<div class="controls">{{ field }}
+							<span class="help-inline">
+								{% for error in  field.errors %}{{ error }}{% endfor %}
+							</span>
+						</div>
+						</div>
+					{% else %}
+						<div class="form-group">
+						{% ifequal field.label_tag prev_form.preview_sheet.label_tag %}
+							<div class="sheet">
+								<label class="control-label">{{ field.label }}</label> 
+								<div class="controls">{{ field }}</div>
+							</div>
+						{% else %}
+							<label class="control-label">{{ field.label }}</label>
+							<div class="controls">{{ field }}</div>
+						{% endifequal %}
+						</div>
+					{% endif %}
+				{% endfor %}
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary" >Preview</button>
+				</div>
+			</form></p>
 	     	<div id='prev_text'>
 	     		<table class="table table-bordered" id="prev_table">
 	    		<!-- content provided by backbone -->
@@ -119,6 +148,20 @@
 		</div><!-- /.modal-dialog -->
 	</div><!-- /.modal -->
 
+	<!-- Export notification -->
+	<div class="modal fade" id="export_notification_modal" tabindex="-1" role="dialog" aria-labelledby="notificationModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="notificationModalLabel">Exporting</h4>
+				</div>
+				<div class="modal-body">
+					<div id="notification"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<nav class="navbar navbar-default">
 	  <div class="container-fluid">
 	    <!-- Brand and toggle get grouped for better mobile display -->
@@ -140,6 +183,7 @@
 	          <ul class="dropdown-menu">
 	            <li><a href="#help_modal" data-toggle="modal">Usage</a></li>
 	            <li><a href="#annolist_modal" data-toggle="modal">List annotations</a></li>
+	            <li><a href="#preview_modal" data-toggle="modal">Preview data in annotation</a></li>
 	          </ul>
 	        </li>
 	      </ul>
@@ -178,35 +222,6 @@
   					</ul>
   					<div class="tab-content">
 						<div role="tabpanel" class="tab-pane active" id="annotation">
-							<p><form action="{% url 'preview' %}" method="POST" id="preview_form">{% csrf_token %}
-						        {% for field in prev_form %}
-						            {% if field.errors %}
-						                <div class="form-group has-error">
-						                    <label class="control-label">{{ field.label }}</label> 
-						                    <div class="controls">{{ field }}
-						                        <span class="help-inline">
-						                            {% for error in  field.errors %}{{ error }}{% endfor %}
-						                        </span>
-						                    </div>
-						                </div>
-						            {% else %}
-						                <div class="form-group">
-						                	{% ifequal field.label_tag prev_form.preview_sheet.label_tag %}
-						                		<div class="sheet">
-													<label class="control-label">{{ field.label }}</label> 
-							                    	<div class="controls">{{ field }}</div>
-						                    	</div>
-											{% else %}
-												<label class="control-label">{{ field.label }}</label>
-						                    	<div class="controls">{{ field }}</div>
-											{% endifequal %}
-						                </div>
-						            {% endif %}
-						        {% endfor %}
-								<div class="form-actions">
-		        					<button type="submit" class="btn btn-primary" >Preview</button>
-		    					</div>
-							</form></p>
 							<p><form action="{% url 'find' %}" method="POST" id="annotation_form">{% csrf_token %}
 						        {% for field in form %}
 						            {% if field.errors %}
@@ -233,30 +248,32 @@
 						            {% endif %}
 						        {% endfor %}
 								<div class="form-actions">
-		        					<button type="submit" class="btn btn-primary" >Get data from OMERO</button>
+		        					<button type="submit" class="btn btn-primary" >Get data from annotation</button>
 		    					</div>
 							</form></p>
-							<form class="form-horizontal" id="plot_data_update">
+							<p><form id="plot_data_update">
 								<div class="form-group">
-									<div class="col-sm-10">
+									<label class="control-label">X:</label>
+									<div class="controls">
 										<select id="id_x_data_update">
 											<option value=""></option>
 										</select>
 									</div>
 								</div>
 								<div class="form-group">
-									<div class="col-sm-10">
+									<label class="control-label">Y:</label>
+									<div class="controls">
 										<select id="id_y_data_update" name="y_data_update" multiple="multiple">
 											<option value=""></option>
 										</select>
 									</div>
 								</div>
 								<div class="form-group">
-									<div class="col-sm-10">
-	        							<button class="btn btn-primary" id="update_plot_data">Update</button>
-	        						</div>
-	        					</div>
-							</form>
+									<div class="form-actions">
+		    							<button class="btn btn-primary" id="update_plot_data">Update</button>
+		    						</div>
+		    					</div>
+							</form></p>
 						</div>
   						<div role="tabpanel" class="tab-pane" id="plot_settings">
   							<p></p>
@@ -292,10 +309,10 @@
 				{% endif %}
 			</div>
 			<div class="col-xs-12 col-md-8">
-				<div class="plot-container" id="plot_container">
-				<div class="export">
-		        	<button class="btn btn-primary btn-sm" id="plot_save">Export to OMERO</button>
-		        </div>
+				<div class="graph-container" id="graph_container">
+					<div class="export">
+			        	<button class="btn btn-primary btn-sm" id="graph_save">Export to OMERO</button>
+			        </div>
 				</div>
 			</div>
 		</div>
@@ -355,6 +372,11 @@
 					$("#sheet").hide();
 				}
 			});
+
+			$("#id_annotation").trigger("chosen:updated");
+			$('#id_annotation').val('').trigger('liszt:updated');
+			$("#id_preview_annotation").trigger("chosen:updated");
+			$('#id_preview_annotation').val('').trigger('liszt:updated');
 		});
 	</script>
 </body>
