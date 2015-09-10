@@ -1,4 +1,4 @@
-.graph-container {
+.plot-container {
 	box-sizing: border-box;
 	width: 90%;
 	height: 550px;
@@ -18,7 +18,7 @@
 	-webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);*/
 }
 
-#graph_save {
+#plot_save {
 	position: relative;
 	top: -20px;
 }
