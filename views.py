@@ -1,6 +1,7 @@
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from forms import PreviewForm,AnnotationsForm,PlotForm
+from plot import settings
 
 import os
 import re
@@ -22,7 +23,9 @@ import omero
 from omeroweb.webclient.decorators import login_required
 
 ANNPATH = '/home/omero/temp'
-py.sign_in('drmatthews','p79h3judnk')
+username = settings.PLOTLY_USERNAME
+api_key = settings.PLOTLY_APIKEY
+py.sign_in(username,api_key)
 #ANNPATH = tempfile.mkdtemp(prefix='downloaded_annotations')
 
 def plotly_graph(gdata, glayout):
