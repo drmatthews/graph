@@ -123,18 +123,6 @@ var PreviewView = Backbone.View.extend({
 				console.log(prevresults)
 				previewModal.modalData(prevresults);
 				previewModal.show();
-				/*if ($("#prev_text").length === 0){
-					$("#preview_data").append('<p id=prev_text></p>');
-					for (i=0;i<prevresults.preview_data.length;i++){
-						$("#prev_text").append('Row '+String(i)+':      '+prevresults.preview_data[i]+'</br>');
-					}
-				}
-				else{
-					$("#prev_text").empty();
-					for (i=0;i<prevresults.preview_data.length;i++){
-						$("#prev_text").append('Row '+String(i)+':      '+prevresults.preview_data[i]+'</br>');
-					}
-				};*/
 		  },
           statusCode: {
               400: function() {
@@ -184,13 +172,18 @@ var plotSetupModalView = Backbone.View.extend({
 				model.set({'title': title, 'x': xdata, 'y': ydata, 'currentXlabel': xLabel, 
 							'currentYlabel': yLabel, 'plot_mode': plot_mode});
 				model.update();
-				$('#inputTitle').val(title);
-				$('#inputXlabel').val(xLabel);
-				$('#inputYlabel').val(yLabel);
-				$('#id_x_data_update').val(x);
+				$("#inputTitle").val(title);
+				$("#inputXlabel").val(xLabel);
+				$("#inputYlabel").val(yLabel);
+				$("#id_mode_update").val(plot_mode);
+				$("#id_mode_update").trigger("chosen:updated");
+				$("#id_x_data_update").val(x);
 				$("#id_x_data_update").trigger("chosen:updated");
-				$('#id_y_data_update').val(y);
+				$("#id_y_data_update").val(y);
 				$("#id_y_data_update").trigger("chosen:updated");
+				$("#id_annotation").trigger("chosen:updated");
+				$("#id_annotation").val('').trigger('liszt:updated');
+				$("#id_header").val(0);
 				$("#plot_data_update").show();
 				el.modal('hide');
 		  },
@@ -201,23 +194,63 @@ var plotSetupModalView = Backbone.View.extend({
     }
 });
 
-var plotSettingsEditView = Backbone.View.extend({
+var plotTitleUpdateView = Backbone.View.extend({
 	el: '#plot_settings',
 	events:{
-		'click #updateButton' : 'editPlot',
+		'change #inputTitle' : 'editPlot',
 	},
 	editPlot: function(e){
 		e.preventDefault();
-		var title = $('#inputTitle').val(),
-			xLabel = $('#inputXlabel').val(),
-			yLabel = $('#inputYlabel').val();
-		console.log('title',title)
-		this.model.set({'title': title, 'currentXlabel': xLabel,
-						'currentYlabel': yLabel});
-		this.model.update_title_and_axis();
-		$('#inputTitle').val('');
-		$('#inputXlabel').val('');
-		$('#inputYlabel').val('');
+		var title = $('#inputTitle').val();
+		this.model.set({'title': title});
+		this.model.update();
+	}
+});
+
+var plotXLabelUpdateView = Backbone.View.extend({
+	el: '#plot_settings',
+	events:{
+		'change #inputXlabel' : 'editPlot',
+	},
+	editPlot: function(e){
+		e.preventDefault();
+		var label = $('#inputXlabel').val();
+		this.model.set({'currentXlabel': label});
+		this.model.update();
+	}
+});
+
+var plotYLabelUpdateView = Backbone.View.extend({
+	el: '#plot_settings',
+	events:{
+		'change #inputYlabel' : 'editPlot',
+	},
+	editPlot: function(e){
+		e.preventDefault();
+		var label = $('#inputYlabel').val();
+		this.model.set({'currentYlabel': label});
+		this.model.update();
+	}
+});
+
+var plotModeUpdateView = Backbone.View.extend({
+	el: '#plot_settings',
+	events:{
+		'change #id_mode_update' : 'editPlot',
+	},
+	editPlot: function(e){
+		e.preventDefault();
+		var plot_mode = $('#id_mode_update').val();
+		console.log(plot_mode)
+
+		if (plot_mode != 'bar'){
+			var plot_type = 'scatter';
+		}
+		else {
+			var plot_type = 'bar';
+		}
+		this.model.set({'plot_mode': plot_mode, 'type': plot_type});
+		this.model.update();
 	}
 });
 

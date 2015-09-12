@@ -13,7 +13,7 @@
 			currentYlabel: 'y axis label',
 			title: 'chart title',
 			plot_mode: 'lines+markers',
-			type: 'scatter',
+			type: 'bar',
 			layout: {
 				title: 'chart title',
 				autosize: false,
@@ -90,16 +90,20 @@
 				Plotly.deleteTraces(graphDiv, t);
 			}
 
-			if (plot_type != 'bar'){
-				var ymin = [],
-					ymax = [];
-				for (t = 0; t < ydata.length; t++){
-					Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t], 'type': 'scatter',
-												'mode': plot_mode});
-					ymin.push(Math.min.apply(Math,ydata[t]));
-					ymax.push(Math.max.apply(Math,ydata[t]));
-				}
+			var ymin = [],
+				ymax = [];
+			console.log('plot_mode',plot_mode)
+			if (plot_mode != 'bar'){
+				plot_type = 'scatter';
+			};
+			console.log(plot_type)
+			for (t = 0; t < ydata.length; t++){
+				Plotly.addTraces(graphDiv, {'x': xdata,'y': ydata[t], 'type': plot_type,
+											'mode': plot_mode});
+				ymin.push(Math.min.apply(Math,ydata[t]));
+				ymax.push(Math.max.apply(Math,ydata[t]));
 			}
+
 			this.set({plot_mode: plot_mode});
 			this.set({num_traces: ydata.length});
 

@@ -29,9 +29,9 @@ class PlotForm(forms.Form):
     y_Label = CharField(max_length=50,required=False)
     #tick_size = IntegerField(required=False,min_value=1)
     plot_mode = ChoiceField(choices=(('',''),('bar','bar'),
-                                            ('lines','lines'),\
+                                            ('lines','line'),\
                                             ('markers','markers'),\
-                                            ('lines+markers','lines+markers')),\
+                                            ('lines+markers','line+markers')),\
                                             required=True)
     x_data = ChoiceField(choices=(),required=True)
     y_data = MultipleChoiceField(choices=(),required=True)
