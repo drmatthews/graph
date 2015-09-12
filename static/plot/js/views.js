@@ -242,7 +242,14 @@ var plotModeUpdateView = Backbone.View.extend({
 		e.preventDefault();
 		var plot_mode = $('#id_mode_update').val();
 		console.log(plot_mode)
-		this.model.set({'plot_mode': plot_mode});
+
+		if (plot_mode != 'bar'){
+			var plot_type = 'scatter';
+		}
+		else {
+			var plot_type = 'bar';
+		}
+		this.model.set({'plot_mode': plot_mode, 'type': plot_type});
 		this.model.update();
 	}
 });
