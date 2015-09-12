@@ -7,10 +7,11 @@ This makes use of the plot.ly Javascript and Python APIs to plot data in the web
 To install this app:
 
 1. Put the app in a location on your local file system which is on the PYTHONPATH
-2. Make the app available in OMERO.web by running bin/omero config append omero.web.apps '"<your-app>"'
-3. Stop and stop OMERO.web
-    bin/omero web start
-    bin/omero web stop
+2. Make the app available in OMERO.web by running:
+	$ bin/omero config append omero.web.apps '"plot"'
+3. Stop and stop OMERO.web:
+    $ bin/omero web start
+    $ bin/omero web stop
 
 Note:
 
