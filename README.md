@@ -15,6 +15,6 @@ To install this app:
 
 Note:
 
-In order to use the plot.ly Python API your are required to have an API_KEY. You should sign up for plot.ly (free) to get this key. Your USERNAME and API_KEY should then be copied into settings.py.
+In order to use the plot.ly Python API you are required to have an API_KEY. You should sign up for plot.ly (free) to get this key. Your USERNAME and API_KEY should then be copied into settings.py.
     
     
